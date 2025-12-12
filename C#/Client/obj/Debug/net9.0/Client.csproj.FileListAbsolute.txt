@@ -1,0 +1,14 @@
+D:\C#\Client\bin\Debug\net9.0\Client.exe
+D:\C#\Client\bin\Debug\net9.0\Client.deps.json
+D:\C#\Client\bin\Debug\net9.0\Client.runtimeconfig.json
+D:\C#\Client\bin\Debug\net9.0\Client.dll
+D:\C#\Client\bin\Debug\net9.0\Client.pdb
+D:\C#\Client\obj\Debug\net9.0\Client.GeneratedMSBuildEditorConfig.editorconfig
+D:\C#\Client\obj\Debug\net9.0\Client.AssemblyInfoInputs.cache
+D:\C#\Client\obj\Debug\net9.0\Client.AssemblyInfo.cs
+D:\C#\Client\obj\Debug\net9.0\Client.csproj.CoreCompileInputs.cache
+D:\C#\Client\obj\Debug\net9.0\Client.dll
+D:\C#\Client\obj\Debug\net9.0\refint\Client.dll
+D:\C#\Client\obj\Debug\net9.0\Client.pdb
+D:\C#\Client\obj\Debug\net9.0\Client.genruntimeconfig.cache
+D:\C#\Client\obj\Debug\net9.0\ref\Client.dll
