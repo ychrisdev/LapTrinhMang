@@ -1,23 +1,23 @@
-from sequential import run_sequential
+from event_loop_demo import run_event_loop
 from threading_demo import run_threading
 from callback_demo import run_callback
-from promise_demo import run_future
+from future_promise_demo import run_future
 from async_await_demo import run_async_await
 
 def main():
     n = 5
 
     print("===== ASYNCHRONOUS SIMULATOR =====")
-    print("1. Sequential")
+    print("1. Event-driven / Event Loop")
     print("2. Multithreading")
     print("3. Callback")
-    print("4. Promise")
+    print("4. Promise / Future")
     print("5. Async / Await")
 
     choice = int(input("Chon ki thuat: "))
 
     if choice == 1:
-        run_sequential(n)
+        run_event_loop(n)
     elif choice == 2:
         run_threading(n)
     elif choice == 3:
