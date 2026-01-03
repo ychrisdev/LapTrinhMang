@@ -1,0 +1,110 @@
+{
+  "info": {
+    "name": "Blog System API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": "http://localhost:3000/api/auth/register"
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@blog.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": "http://localhost:3000/api/auth/login"
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": "http://localhost:3000/api/auth/profile"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Blogs",
+      "item": [
+        {
+          "name": "Get All Blogs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/api/blogs?search=&sort=created_at&order=DESC",
+              "query": [
+                {"key": "search", "value": ""},
+                {"key": "sort", "value": "created_at"},
+                {"key": "order", "value": "DESC"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Single Blog",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/blogs/1"
+          }
+        },
+        {
+          "name": "Create Blog",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {"key": "title", "value": "My Blog", "type": "text"},
+                {"key": "content", "value": "Blog content here", "type": "text"},
+                {"key": "image", "type": "file", "src": ""}
+              ]
+            },
+            "url": "http://localhost:3000/api/blogs"
+          }
+        },
+        {
+          "name": "Update Blog",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {"key": "title", "value": "Updated Title", "type": "text"},
+                {"key": "content", "value": "Updated content", "type": "text"}
+              ]
+            },
+            "url": "http://localhost:3000/api/blogs/1"
+          }
+        },
+        {
+          "name": "Delete Blog",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": "http://localhost:3000/api/blogs/1"
+          }
+        }
+      ]
+    }
+  ]
+}

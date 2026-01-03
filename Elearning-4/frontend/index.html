@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blog App | Creative Space</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body { font-family: 'Inter', sans-serif; @apply bg-slate-50 text-slate-900; }
+      
+      /* Định nghĩa các Custom Component kế thừa Tailwind */
+      .input {
+        @apply w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all;
+      }
+      .btn {
+        @apply px-5 py-2.5 rounded-lg font-medium transition-all active:scale-95 flex items-center justify-center gap-2;
+      }
+      .btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700 shadow-sm; }
+      .btn-secondary { @apply bg-white border border-slate-200 text-slate-700 hover:bg-slate-50; }
+      .btn-danger { @apply bg-red-50 text-red-600 hover:bg-red-600 hover:text-white; }
+      .card { @apply bg-white rounded-xl border border-slate-100 shadow-sm p-6 hover:shadow-md transition-shadow; }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div> <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
