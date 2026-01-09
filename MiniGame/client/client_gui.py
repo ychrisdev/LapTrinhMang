@@ -24,18 +24,29 @@ class RPSClientGUI:
             root.destroy()
             return
 
+        btn_bottom = tk.Frame(root)
+        btn_bottom.pack(pady=15)
+        
+        tk.Button(
+            btn_bottom,
+            text="DUNG LAI",
+            width=12,
+            command=self.pause_menu
+        ).grid(row=0, column=1, padx=5)
+
+
         # ====== TIEU DE ======
         tk.Label(
             root,
             text="TRO CHOI KEO - BUA - BAO",
-            font=("Arial", 16, "bold")
-        ).pack(pady=10)
+            font=("Arial", 20, "bold")
+        ).pack(pady=40)
 
         # ====== TI SO ======
         tk.Label(
             root,
             text="TỈ SỐ",
-            font=("Arial", 14, "bold")
+            font=("Arial", 12, "bold")
         ).pack(pady=5)
 
         # ====== KHUNG TI SO ======
@@ -49,13 +60,13 @@ class RPSClientGUI:
         tk.Label(
             client_frame,
             text="CLIENT",
-            font=("Arial", 12, "bold")
+            font=("Arial", 10, "bold")
         ).pack(pady=5)
 
         self.client_score_box = tk.Label(
             client_frame,
             text="0",
-            font=("Arial", 18, "bold"),
+            font=("Arial", 11, "bold"),
             width=6,
             height=2,
             relief="solid",
@@ -71,13 +82,13 @@ class RPSClientGUI:
         tk.Label(
             server_frame,
             text="SERVER",
-            font=("Arial", 12, "bold")
+            font=("Arial", 10, "bold")
         ).pack(pady=5)
 
         self.server_score_box = tk.Label(
             server_frame,
             text="0",
-            font=("Arial", 18, "bold"),
+            font=("Arial", 11, "bold"),
             width=6,
             height=2,
             relief="solid",
@@ -109,22 +120,7 @@ class RPSClientGUI:
         self.server_choice_label = tk.Label(root, text="")
         self.server_choice_label.pack()
 
-        btn_bottom = tk.Frame(root)
-        btn_bottom.pack(pady=15)
         
-        tk.Button(
-            btn_bottom,
-            text="LICH SU",
-            width=15,
-            command=self.show_history
-        ).grid(row=0, column=0, padx=5)
-
-        tk.Button(
-            btn_bottom,
-            text="THOAT",
-            width=15,
-            command=self.exit_game
-        ).grid(row=0, column=1, padx=5)
 
     def play(self, choice):
         try:
@@ -170,16 +166,29 @@ class RPSClientGUI:
         self.root.destroy()
 
     def show_history(self):
+        # ==== CHUA CO LICH SU ====
         if not self.history:
-            messagebox.showinfo("Lich su", "Chua co nuoc di nao.")
+            messagebox.showinfo(
+                "Lich su",
+                "Chua co nuoc di nao.\nHay choi it nhat 1 van.",
+                parent=self.pause_window
+            )
+            # ❗ pause vẫn giữ grab → bấm tiếp tục được
             return
 
+        # ==== CO LICH SU ====
         history_window = tk.Toplevel(self.root)
         history_window.title("Lich su nuoc di")
         history_window.geometry("350x300")
+        history_window.resizable(False, False)
+
+        # 🔑 CHUYEN GRAB TU PAUSE SANG HISTORY
+        self.pause_window.grab_release()
+        history_window.transient(self.pause_window)
+        history_window.grab_set()
 
         text = tk.Text(history_window, wrap="word")
-        text.pack(expand=True, fill="both")
+        text.pack(expand=True, fill="both", padx=5, pady=5)
 
         for i, h in enumerate(self.history, start=1):
             text.insert(
@@ -190,6 +199,63 @@ class RPSClientGUI:
             )
 
         text.config(state="disabled")
+
+        # ===== QUAY LAI PAUSE =====
+        def back_to_pause():
+            history_window.grab_release()
+            self.pause_window.grab_set()
+            history_window.destroy()
+
+        tk.Button(
+            history_window,
+            text="QUAY LAI",
+            width=12,
+            command=back_to_pause
+        ).pack(pady=8)
+
+        history_window.protocol("WM_DELETE_WINDOW", back_to_pause)
+
+
+    def pause_menu(self):
+        pause_window = tk.Toplevel(self.root)
+        self.pause_window = pause_window 
+        
+        pause_window.title("Tam dung")
+        pause_window.geometry("300x200")
+        pause_window.resizable(False, False)
+
+        pause_window.transient(self.root)
+        pause_window.grab_set() #chặn chơi
+
+        tk.Label(
+            pause_window,
+            text="TAM DUNG GAME",
+            font=("Arial", 12, "bold")
+        ).pack(pady=15)
+
+        btn_frame = tk.Frame(pause_window)
+        btn_frame.pack(pady=10)
+
+        tk.Button(
+            btn_frame,
+            text="LICH SU",
+            width=15,
+            command= self.show_history
+        ).pack(pady=5)
+
+        tk.Button(
+            btn_frame,
+            text="TIEP TUC",
+            width=15,
+            command=pause_window.destroy
+        ).pack(pady=5)
+
+        tk.Button(
+            btn_frame,
+            text="THOAT",
+            width=15,
+            command=self.exit_game
+        ).pack(pady=5)
 
 
 
