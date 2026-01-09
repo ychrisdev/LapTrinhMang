@@ -10,8 +10,10 @@ class RPSClientGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Keo - Bua - Bao")
-        self.root.geometry("420x420")
+        self.root.geometry("600x550")
         self.root.resizable(False, False)
+
+        self.history = []
 
         # Ket noi server
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -107,13 +109,22 @@ class RPSClientGUI:
         self.server_choice_label = tk.Label(root, text="")
         self.server_choice_label.pack()
 
-        # ====== THOAT ======
+        btn_bottom = tk.Frame(root)
+        btn_bottom.pack(pady=15)
+        
         tk.Button(
-            root,
+            btn_bottom,
+            text="LICH SU",
+            width=15,
+            command=self.show_history
+        ).grid(row=0, column=0, padx=5)
+
+        tk.Button(
+            btn_bottom,
             text="THOAT",
             width=15,
             command=self.exit_game
-        ).pack(pady=20)
+        ).grid(row=0, column=1, padx=5)
 
     def play(self, choice):
         try:
@@ -135,6 +146,14 @@ class RPSClientGUI:
                 self.server_choice_label.config(
                     text=f"Server chon: {result['lua_chon_server'].upper()}"
                 )
+
+                # Luu lich su
+                self.history.append({
+                    "client": result["lua_chon_client"],
+                    "server": result["lua_chon_server"],
+                    "ket_qua": result["ket_qua"]
+                })
+
             else:
                 messagebox.showwarning("Loi", result["message"])
 
@@ -149,6 +168,29 @@ class RPSClientGUI:
             pass
         self.client_socket.close()
         self.root.destroy()
+
+    def show_history(self):
+        if not self.history:
+            messagebox.showinfo("Lich su", "Chua co nuoc di nao.")
+            return
+
+        history_window = tk.Toplevel(self.root)
+        history_window.title("Lich su nuoc di")
+        history_window.geometry("350x300")
+
+        text = tk.Text(history_window, wrap="word")
+        text.pack(expand=True, fill="both")
+
+        for i, h in enumerate(self.history, start=1):
+            text.insert(
+                "end",
+                f"Van {i}: Ban chon {h['client']} | "
+                f"Server chon {h['server']} | "
+                f"Ket qua: {h['ket_qua']}\n"
+            )
+
+        text.config(state="disabled")
+
 
 
 if __name__ == "__main__":
