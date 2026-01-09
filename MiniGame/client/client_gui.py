@@ -9,8 +9,8 @@ from config import HOST, PORT, BUFFER_SIZE
 class RPSClientGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("Tro choi Keo - Bua - Bao")
-        self.root.geometry("400x300")
+        self.root.title("Keo - Bua - Bao")
+        self.root.geometry("420x420")
         self.root.resizable(False, False)
 
         # Ket noi server
@@ -18,50 +18,117 @@ class RPSClientGUI:
         try:
             self.client_socket.connect((HOST, PORT))
         except Exception as e:
-            messagebox.showerror("Loi", f"Khong ket noi duoc server:\n{e}")
+            messagebox.showerror("Loi", str(e))
             root.destroy()
             return
 
-        # Tieu de
-        title = tk.Label(
+        # ====== TIEU DE ======
+        tk.Label(
             root,
             text="TRO CHOI KEO - BUA - BAO",
             font=("Arial", 16, "bold")
+        ).pack(pady=10)
+
+        # ====== TI SO ======
+        tk.Label(
+            root,
+            text="TỈ SỐ",
+            font=("Arial", 14, "bold")
+        ).pack(pady=5)
+
+        # ====== KHUNG TI SO ======
+        score_frame = tk.Frame(root)
+        score_frame.pack(pady=10, fill="x")
+
+        # ---- CLIENT ----
+        client_frame = tk.Frame(score_frame)
+        client_frame.pack(side="left", expand=True)
+
+        tk.Label(
+            client_frame,
+            text="CLIENT",
+            font=("Arial", 12, "bold")
+        ).pack(pady=5)
+
+        self.client_score_box = tk.Label(
+            client_frame,
+            text="0",
+            font=("Arial", 18, "bold"),
+            width=6,
+            height=2,
+            relief="solid",
+            bd=2,
+            fg="green"
         )
-        title.pack(pady=10)
+        self.client_score_box.pack()
 
-        # Nut lua chon
+        # ---- SERVER ----
+        server_frame = tk.Frame(score_frame)
+        server_frame.pack(side="right", expand=True)
+
+        tk.Label(
+            server_frame,
+            text="SERVER",
+            font=("Arial", 12, "bold")
+        ).pack(pady=5)
+
+        self.server_score_box = tk.Label(
+            server_frame,
+            text="0",
+            font=("Arial", 18, "bold"),
+            width=6,
+            height=2,
+            relief="solid",
+            bd=2,
+            fg="red"
+        )
+        self.server_score_box.pack()
+
+        # ====== NUT CHON ======
         btn_frame = tk.Frame(root)
-        btn_frame.pack(pady=10)
+        btn_frame.pack(pady=15)
 
-        tk.Button(btn_frame, text="KEO", width=10,
-                  command=lambda: self.play("keo")).grid(row=0, column=0, padx=5)
+        for i, c in enumerate(["keo", "bua", "bao"]):
+            tk.Button(
+                btn_frame,
+                text=c.upper(),
+                width=10,
+                command=lambda x=c: self.play(x)
+            ).grid(row=0, column=i, padx=5)
 
-        tk.Button(btn_frame, text="BUA", width=10,
-                  command=lambda: self.play("bua")).grid(row=0, column=1, padx=5)
-
-        tk.Button(btn_frame, text="BAO", width=10,
-                  command=lambda: self.play("bao")).grid(row=0, column=2, padx=5)
-
-        # Ket qua
-        self.result_label = tk.Label(root, text="Hay chon nuoc di",
-                                     font=("Arial", 12))
+        # ====== KET QUA ======
+        self.result_label = tk.Label(
+            root,
+            text="Hay chon nuoc di",
+            font=("Arial", 12)
+        )
         self.result_label.pack(pady=10)
 
         self.server_choice_label = tk.Label(root, text="")
         self.server_choice_label.pack()
 
-        # Nut thoat
-        tk.Button(root, text="THOAT", width=15,
-                  command=self.exit_game).pack(pady=20)
+        # ====== THOAT ======
+        tk.Button(
+            root,
+            text="THOAT",
+            width=15,
+            command=self.exit_game
+        ).pack(pady=20)
 
     def play(self, choice):
         try:
             self.client_socket.send(choice.encode())
-            response = self.client_socket.recv(BUFFER_SIZE).decode()
-            result = json.loads(response)
+            result = json.loads(
+                self.client_socket.recv(BUFFER_SIZE).decode()
+            )
 
             if result["status"] == "ok":
+                c = result["client_score"]
+                s = result["server_score"]
+
+                self.client_score_box.config(text=str(c))
+                self.server_score_box.config(text=str(s))
+
                 self.result_label.config(
                     text=f"Ket qua: BAN {result['ket_qua'].upper()}"
                 )
@@ -72,7 +139,7 @@ class RPSClientGUI:
                 messagebox.showwarning("Loi", result["message"])
 
         except Exception as e:
-            messagebox.showerror("Loi", f"Mat ket noi server:\n{e}")
+            messagebox.showerror("Loi", str(e))
             self.root.destroy()
 
     def exit_game(self):
@@ -86,5 +153,5 @@ class RPSClientGUI:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = RPSClientGUI(root)
+    RPSClientGUI(root)
     root.mainloop()
