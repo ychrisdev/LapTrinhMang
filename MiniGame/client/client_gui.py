@@ -166,28 +166,27 @@ class RPSClientGUI:
         self.root.destroy()
 
     def show_history(self):
-        # ==== CHUA CO LICH SU ====
+        # ===== CHUA CO LICH SU =====
         if not self.history:
             messagebox.showinfo(
                 "Lich su",
                 "Chua co nuoc di nao.\nHay choi it nhat 1 van.",
                 parent=self.pause_window
             )
-            # ❗ pause vẫn giữ grab → bấm tiếp tục được
             return
 
-        # ==== CO LICH SU ====
+        # ===== CO LICH SU =====
         history_window = tk.Toplevel(self.root)
         history_window.title("Lich su nuoc di")
-        history_window.geometry("350x300")
+        history_window.geometry("350x320")
         history_window.resizable(False, False)
 
-        # 🔑 CHUYEN GRAB TU PAUSE SANG HISTORY
+        # 🔑 Chuyen quyen tu PAUSE sang HISTORY
         self.pause_window.grab_release()
         history_window.transient(self.pause_window)
         history_window.grab_set()
 
-        text = tk.Text(history_window, wrap="word")
+        text = tk.Text(history_window, wrap="word", height=12)
         text.pack(expand=True, fill="both", padx=5, pady=5)
 
         for i, h in enumerate(self.history, start=1):
@@ -200,7 +199,7 @@ class RPSClientGUI:
 
         text.config(state="disabled")
 
-        # ===== QUAY LAI PAUSE =====
+        # ===== NUT QUAY LAI =====
         def back_to_pause():
             history_window.grab_release()
             self.pause_window.grab_set()
@@ -213,7 +212,9 @@ class RPSClientGUI:
             command=back_to_pause
         ).pack(pady=8)
 
+        # Khi bam X tren cua so
         history_window.protocol("WM_DELETE_WINDOW", back_to_pause)
+
 
 
     def pause_menu(self):
