@@ -42,19 +42,20 @@ class RPSClientGUI:
 
         # ===== NUT DUNG LAI =====
         btn_bottom = tk.Frame(root)
-        btn_bottom.pack(pady=10)
+        btn_bottom.pack(fill="x", pady=15)
 
         tk.Button(
             btn_bottom,
-            text="DUNG LAI",
-            width=12,
+            text="| |",
+            font=("Arial", 12),
+            width=4,
             command=self.pause_menu
-        ).pack()
+        ).pack(side="right", padx=15)
 
         # ===== TIEU DE =====
         tk.Label(
             root,
-            text="TRO CHOI KEO - BUA - BAO",
+            text="TRÒ CHƠI KÉO - BÚA - BAO",
             font=("Arial", 20, "bold")
         ).pack(pady=20)
 
@@ -62,7 +63,7 @@ class RPSClientGUI:
         tk.Label(
             root,
             text="TỈ SỐ",
-            font=("Arial", 12, "bold")
+            font=("Arial", 15, "bold")
         ).pack(pady=5)
 
         score_frame = tk.Frame(root)
@@ -156,6 +157,9 @@ class RPSClientGUI:
             )
 
             if result["status"] == "ok":
+                c = result["client_score"]
+                s = result["server_score"]
+
                 self.client_score_box.config(
                     text=str(result["client_score"])
                 )
@@ -181,10 +185,13 @@ class RPSClientGUI:
                 else:
                     self.result_center.config(text="HÒA", fg="orange")
 
+                # LUU LICH SU
                 self.history.append({
                     "client": result["lua_chon_client"],
                     "server": result["lua_chon_server"],
-                    "ket_qua": result["ket_qua"]
+                    "ket_qua": result["ket_qua"],
+                    "client_score": c,
+                    "server_score": s
                 })
 
             else:
@@ -243,29 +250,45 @@ class RPSClientGUI:
 
         history_window = tk.Toplevel(self.root)
         history_window.title("Lich su")
-        history_window.geometry("360x320")
+        history_window.geometry("420x320")
         history_window.resizable(False, False)
 
         self.pause_window.grab_release()
         history_window.grab_set()
 
-        text = tk.Text(history_window, height=12)
+        text = tk.Text(
+            history_window,
+            height=12,
+            font=("Consolas", 10)
+        )
         text.pack(padx=5, pady=5, fill="both")
 
+        # ===== HEADER =====
+        header = (
+            "  Ván  |  Client  |  Server  |    KQ    |  Tỉ số\n"
+            "-------+----------+----------+----------+---------\n"
+        )
+        text.insert("end", header)
+
+        # ===== DATA =====
         for i, h in enumerate(self.history, start=1):
             text.insert(
                 "end",
-                f"Van {i}: {h['client']} - {h['server']} → {h['ket_qua']}\n"
+                f"   {i:<3} |   "
+                f" {h['client']:<6}|    "
+                f"{h['server']:<6}| "
+                f"  {h['ket_qua']:<5}  |   "
+                f"{h['client_score']}-{h['server_score']}\n"
             )
 
-        text.config(state="disabled")
+        text.pack(padx=5, pady=5, side="top", fill="x")
 
         tk.Button(
             history_window,
             text="QUAY LAI",
             width=12,
             command=history_window.destroy
-        ).pack(pady=8)
+        ).pack(pady=0, side="top")
 
     def exit_game(self):
         try:
