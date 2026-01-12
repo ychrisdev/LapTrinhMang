@@ -5,7 +5,7 @@ from ui_game import GameScreen
 class App(tk.Tk):
     def __init__(self, client):
         super().__init__()
-        self.title("Caro Online")
+        self.title("Caro Game")
         self.geometry("600x700")
         self.resizable(False, False)
 
