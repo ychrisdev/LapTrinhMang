@@ -1,4 +1,3 @@
-# client/ui_menu.py
 import tkinter as tk
 
 class MenuScreen(tk.Frame):
@@ -8,7 +7,7 @@ class MenuScreen(tk.Frame):
 
         tk.Label(
             self,
-            text="CARO ONLINE",
+            text="CARO GAME",
             font=("Arial", 28, "bold")
         ).pack(pady=40)
 
@@ -29,26 +28,20 @@ class MenuScreen(tk.Frame):
             font=("Arial", 14)
         ).pack(anchor="w", pady=5)
 
-        btn_frame = tk.Frame(self)
-        btn_frame.pack(pady=40)
-
         tk.Button(
-            btn_frame, text="Tạo phòng",
+            self, text="Bắt đầu chơi",
             font=("Arial", 16),
-            width=15, height=2,
-            command=self.create_room
-        ).grid(row=0, column=0, padx=20)
+            width=20, height=2,
+            command=self.quick_play
+        ).pack(pady=30)
 
-        tk.Button(
-            btn_frame, text="Tham gia phòng",
-            font=("Arial", 16),
-            width=15, height=2,
-            command=self.join_room
-        ).grid(row=0, column=1, padx=20)
+        self.status = tk.Label(self, text="", font=("Arial", 12))
+        self.status.pack(pady=10)
 
-    def create_room(self):
+    def quick_play(self):
         size = self.size_var.get()
-        self.client.send("create_room", {"size": size})
+        self.status.config(text="Đang tìm đối thủ...")
+        self.client.send("quick_play", {"size": size})
 
-    def join_room(self):
-        self.client.send("join_room", {})
+    def set_status(self, text):
+        self.status.config(text=text)

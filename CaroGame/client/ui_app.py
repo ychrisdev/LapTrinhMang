@@ -29,12 +29,15 @@ class App(tk.Tk):
         msg_type = msg["type"]
         data = msg["data"]
 
-        if msg_type == "start_game":
-            # Chuyển sang màn hình chơi
+        if msg_type == "waiting":
+            if hasattr(self.current_screen, "set_status"):
+                self.current_screen.set_status(data["message"])
+
+        elif msg_type == "start_game":
             self.clear_screen()
             self.current_screen = GameScreen(
                 self,
-                self,
+                self,                 # app
                 data["size"],
                 data["symbol"],
                 data["your_turn"]
@@ -54,6 +57,3 @@ class App(tk.Tk):
         elif msg_type == "draw":
             if hasattr(self.current_screen, "handle_draw"):
                 self.current_screen.handle_draw()
-
-        elif msg_type == "back_to_menu":
-            self.show_menu()

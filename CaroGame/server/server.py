@@ -1,4 +1,3 @@
-# server/server.py
 import socket
 import threading
 from protocol import decode, encode
@@ -9,14 +8,19 @@ HOST = "0.0.0.0"
 PORT = 5000
 
 rooms = []
-waiting_room = None
+
+# Mỗi size có 1 phòng chờ
+waiting = {
+    3: None,
+    10: None
+}
 
 
 def handle_client(conn, addr):
-    global waiting_room
     print(f"[+] Client connected: {addr}")
 
-    current_room = None  # Room mà client này thuộc về
+    current_room = None
+    current_size = None
 
     try:
         while True:
@@ -30,40 +34,38 @@ def handle_client(conn, addr):
             msg_type = msg["type"]
             payload = msg["data"]
 
-            if msg_type == "create_room":
+            if msg_type == "quick_play":
                 size = payload["size"]
-                room = Room(size)
-                room.add_player(conn)
-                rooms.append(room)
-                waiting_room = room
-                current_room = room
+                current_size = size
 
-                conn.sendall(encode("room_created", {"size": size}))
-                print(f"Room created with size {size}")
+                if waiting[size] is None:
+                    room = Room(size)
+                    room.add_player(conn)
+                    rooms.append(room)
+                    waiting[size] = room
+                    current_room = room
 
-            elif msg_type == "join_room":
-                if waiting_room and not waiting_room.is_full():
-                    waiting_room.add_player(conn)
-                    current_room = waiting_room
+                    conn.sendall(encode("waiting", {
+                        "message": f"Waiting for opponent ({size}x{size})..."
+                    }))
+                else:
+                    room = waiting[size]
+                    room.add_player(conn)
+                    current_room = room
 
-                    p1, p2 = waiting_room.players
+                    p1, p2 = room.players
                     p1.sendall(encode("start_game", {
-                        "size": waiting_room.size,
+                        "size": size,
                         "symbol": "X",
                         "your_turn": True
                     }))
                     p2.sendall(encode("start_game", {
-                        "size": waiting_room.size,
+                        "size": size,
                         "symbol": "O",
                         "your_turn": False
                     }))
 
-                    print("Room full -> game started")
-                    waiting_room = None
-                else:
-                    conn.sendall(encode("error", {
-                        "message": "No available room"
-                    }))
+                    waiting[size] = None
 
             elif msg_type == "move":
                 if not current_room or current_room.finished:
@@ -110,39 +112,6 @@ def handle_client(conn, addr):
 
                 current_room.switch_turn()
 
-            elif msg_type == "rematch":
-                if current_room and current_room.finished:
-                    current_room.reset()
-                    p1, p2 = current_room.players
-
-                    p1.sendall(encode("start_game", {
-                        "size": current_room.size,
-                        "symbol": "X",
-                        "your_turn": True
-                    }))
-                    p2.sendall(encode("start_game", {
-                        "size": current_room.size,
-                        "symbol": "O",
-                        "your_turn": False
-                    }))
-
-            elif msg_type == "leave_room":
-                if current_room:
-                    for p in current_room.players:
-                        if p != conn:
-                            p.sendall(encode("back_to_menu", {
-                                "message": "Opponent left"
-                            }))
-
-                    if current_room in rooms:
-                        rooms.remove(current_room)
-
-                    if waiting_room == current_room:
-                        waiting_room = None
-
-                    current_room = None
-                    conn.sendall(encode("back_to_menu", {}))
-
     except Exception as e:
         print(f"[!] Error with {addr}: {e}")
 
@@ -153,9 +122,8 @@ def handle_client(conn, addr):
             if current_room in rooms:
                 rooms.remove(current_room)
 
-            # Nếu room đó đang là waiting_room thì xóa luôn
-            if waiting_room == current_room:
-                waiting_room = None
+            if current_size and waiting.get(current_size) == current_room:
+                waiting[current_size] = None
 
         conn.close()
 
