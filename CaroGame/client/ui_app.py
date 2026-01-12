@@ -30,8 +30,13 @@ class App(tk.Tk):
         data = msg["data"]
 
         if msg_type == "waiting":
+            # Nếu đang ở menu → cập nhật status
             if hasattr(self.current_screen, "set_status"):
                 self.current_screen.set_status(data["message"])
+            else:
+                # Nếu đang ở game → quay về menu
+                self.show_menu()
+
 
         elif msg_type == "start_game":
             self.clear_screen()
@@ -57,3 +62,6 @@ class App(tk.Tk):
         elif msg_type == "draw":
             if hasattr(self.current_screen, "handle_draw"):
                 self.current_screen.handle_draw()
+
+        elif msg_type == "back_to_menu":
+            self.show_menu()

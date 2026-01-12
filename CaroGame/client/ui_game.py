@@ -85,6 +85,7 @@ class GameScreen(tk.Frame):
 
     def ask_rematch(self):
         if messagebox.askyesno("Tiếp tục?", "Chơi lại ván mới?"):
-            self.app.client.send("rematch", {})
+            self.app.client.send("rematch", {"play_again": True})
         else:
             self.app.client.send("leave_room", {})
+

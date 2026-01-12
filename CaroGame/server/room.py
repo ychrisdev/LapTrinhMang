@@ -8,6 +8,8 @@ class Room:
         self.board = create_board(size)
         self.turn = 0          # 0: X, 1: O
         self.finished = False  # ván đã kết thúc chưa
+        self.rematch_votes = {}  
+        self.rematch_rejected = False
 
     def add_player(self, conn):
         if len(self.players) < 2:
@@ -24,6 +26,10 @@ class Room:
 
     def get_symbol(self, conn):
         return "X" if self.players[0] == conn else "O"
+
+    def reset_votes(self):
+        for p in self.players:
+            self.rematch_votes[p] = None
 
     def reset(self):
         self.board = create_board(self.size)

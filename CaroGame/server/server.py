@@ -101,16 +101,62 @@ def handle_client(conn, addr):
                         p.sendall(encode("win", {
                             "winner": symbol
                         }))
+
                     current_room.finished = True
+                    current_room.rematch_votes.clear()   # ⭐ THÊM
                     continue
+
 
                 if check_draw(current_room.board):
                     for p in current_room.players:
                         p.sendall(encode("draw", {}))
+
                     current_room.finished = True
+                    current_room.rematch_votes.clear()   # ⭐ THÊM
                     continue
 
+
                 current_room.switch_turn()
+
+            elif msg_type == "rematch":
+                if current_room and current_room.finished:
+                    current_room.rematch_votes[conn] = True
+
+                    # Nếu cả 2 đồng ý
+                    if all(vote is True for vote in current_room.rematch_votes.values()):
+                        current_room.reset()
+                        current_room.reset_votes()
+                        p1, p2 = current_room.players
+                        p1.sendall(encode("start_game", {
+                            "size": current_room.size,
+                            "symbol": "X",
+                            "your_turn": True
+                        }))
+                        p2.sendall(encode("start_game", {
+                            "size": current_room.size,
+                            "symbol": "O",
+                            "your_turn": False
+                        }))
+
+            elif msg_type == "leave_room":
+                if not current_room:
+                    continue
+
+                # Gửi về menu cả 2 client
+                for p in current_room.players:
+                    try:
+                        p.sendall(encode("back_to_menu", {}))
+                    except:
+                        pass
+
+                # Dọn phòng
+                if current_room in rooms:
+                    rooms.remove(current_room)
+                if current_size and waiting.get(current_size) == current_room:
+                    waiting[current_size] = None
+
+                current_room = None
+
 
     except Exception as e:
         print(f"[!] Error with {addr}: {e}")
