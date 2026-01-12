@@ -6,10 +6,10 @@ from tkinter import messagebox
 from config import HOST, PORT, BUFFER_SIZE
 
 
-ICON_MAP = {
-    "keo": "✌️",
-    "bua": "✊",
-    "bao": "✋"
+IMAGE_MAP = {
+    "keo": "images/keo.png",
+    "bua": "images/bua.png",
+    "bao": "images/bao.png"
 }
 
 
@@ -17,10 +17,19 @@ class RPSClientGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Keo - Bua - Bao")
-        self.root.geometry("600x550")
+        self.root.geometry("750x700")
         self.root.resizable(False, False)
 
         self.history = []
+        self.has_played = False  # THEM BIEN KIEM TRA DA CHOI CHUA
+
+        # ===== LOAD IMAGE =====
+        self.images_small = {}
+        self.images_big = {}
+
+        for k, path in IMAGE_MAP.items():
+            self.images_small[k] = tk.PhotoImage(file=path).subsample(2, 2)
+            self.images_big[k] = tk.PhotoImage(file=path)
 
         # ===== KET NOI SERVER =====
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -95,70 +104,83 @@ class RPSClientGUI:
         icon_frame = tk.Frame(root)
         icon_frame.pack(pady=30)
 
-        self.client_icon = tk.Label(
-            icon_frame, text="❔",
-            font=("Arial", 50),
-            fg="green"
+        # CLIENT ICON (BÊN TRÁI)
+        self.client_icon = tk.Label(icon_frame)
+        self.client_icon.pack(side="left", padx=30)
+        
+        # KẾT QUẢ Ở GIỮA
+        self.result_center = tk.Label(
+            icon_frame,
+            text="",
+            font=("Arial", 30, "bold"),
+            width=8
         )
-        self.client_icon.pack(side="left", padx=60)
+        self.result_center.pack(side="left", padx=20)
 
-        self.server_icon = tk.Label(
-            icon_frame, text="❔",
-            font=("Arial", 50),
-            fg="red"
-        )
-        self.server_icon.pack(side="right", padx=60)
+        # SERVER ICON (BÊN PHẢI)
+        self.server_icon = tk.Label(icon_frame)
+        self.server_icon.pack(side="left", padx=30)
 
-        # ===== KET QUA =====
-        self.result_label = tk.Label(
+        # ===== LOI MOI CHOI (HIEN THI O GIUA) =====
+        self.welcome_label = tk.Label(
             root,
-            text="Hay chon nuoc di",
-            font=("Arial", 12)
+            text="Mời bạn chơi !",
+            font=("Arial", 30, "bold"),
+            fg="black"
         )
-        self.result_label.pack()
+        self.welcome_label.pack(pady=20)
 
-        # ===== NUT CHON ICON =====
+        # ===== NUT CHON =====
         btn_frame = tk.Frame(root)
         btn_frame.pack(pady=25)
 
         for i, c in enumerate(["keo", "bua", "bao"]):
             tk.Button(
                 btn_frame,
-                text=ICON_MAP[c],
-                font=("Arial", 22),
-                width=3,
+                image=self.images_small[c],
+                width=80,
+                height=80,
                 command=lambda x=c: self.play(x)
             ).grid(row=0, column=i, padx=15)
 
     def play(self, choice):
         try:
+            # AN LOI MOI CHOI SAU NUOC DI DAU TIEN
+            if not self.has_played:
+                self.welcome_label.pack_forget()
+                self.has_played = True
+
             self.client_socket.send(choice.encode())
             result = json.loads(
                 self.client_socket.recv(BUFFER_SIZE).decode()
             )
 
             if result["status"] == "ok":
-                c = result["client_score"]
-                s = result["server_score"]
+                self.client_score_box.config(
+                    text=str(result["client_score"])
+                )
+                self.server_score_box.config(
+                    text=str(result["server_score"])
+                )
 
-                self.client_score_box.config(text=str(c))
-                self.server_score_box.config(text=str(s))
-
-                # ICON HIEN THI
+                # HIEN THI HINH
                 self.client_icon.config(
-                    text=ICON_MAP[result["lua_chon_client"]],
-                    fg="green"
+                    image=self.images_big[result["lua_chon_client"]]
                 )
                 self.server_icon.config(
-                    text=ICON_MAP[result["lua_chon_server"]],
-                    fg="red"
+                    image=self.images_big[result["lua_chon_server"]]
                 )
 
-                self.result_label.config(
-                    text=f"Ket qua: BAN {result['ket_qua'].upper()}"
-                )
+                # HIEN THI MỘT KẾT QUẢ Ở GIỮA
+                ket_qua_client = result['ket_qua'].upper()
+                
+                if ket_qua_client == "THANG":
+                    self.result_center.config(text="THẮNG", fg="green")
+                elif ket_qua_client == "THUA":
+                    self.result_center.config(text="THUA", fg="red")
+                else:
+                    self.result_center.config(text="HÒA", fg="orange")
 
-                # LUU LICH SU
                 self.history.append({
                     "client": result["lua_chon_client"],
                     "server": result["lua_chon_server"],
