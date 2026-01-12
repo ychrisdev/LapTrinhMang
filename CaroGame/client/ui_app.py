@@ -1,4 +1,3 @@
-# client/ui_app.py
 import tkinter as tk
 from ui_menu import MenuScreen
 from ui_game import GameScreen
@@ -30,38 +29,47 @@ class App(tk.Tk):
         data = msg["data"]
 
         if msg_type == "waiting":
-            # Nếu đang ở menu → cập nhật status
             if hasattr(self.current_screen, "set_status"):
                 self.current_screen.set_status(data["message"])
-            else:
-                # Nếu đang ở game → quay về menu
-                self.show_menu()
-
 
         elif msg_type == "start_game":
+            old_score = None
+            if isinstance(self.current_screen, GameScreen):
+                old_score = self.current_screen.score
+
             self.clear_screen()
             self.current_screen = GameScreen(
                 self,
-                self,                 # app
+                self,
                 data["size"],
                 data["symbol"],
-                data["your_turn"]
+                data["your_turn"],
+                score=old_score
             )
             self.current_screen.pack(fill="both", expand=True)
 
         elif msg_type == "update":
             if hasattr(self.current_screen, "handle_update"):
-                self.current_screen.handle_update(
+                self.after(0, lambda: self.current_screen.handle_update(
                     data["x"], data["y"], data["symbol"]
-                )
+                ))
 
         elif msg_type == "win":
             if hasattr(self.current_screen, "handle_win"):
-                self.current_screen.handle_win(data["winner"])
+                self.after(0, lambda: self.current_screen.handle_win(data["winner"]))
 
         elif msg_type == "draw":
             if hasattr(self.current_screen, "handle_draw"):
-                self.current_screen.handle_draw()
+                self.after(0, self.current_screen.handle_draw)
+
+        elif msg_type == "opponent_pause":
+            if hasattr(self.current_screen, "handle_opponent_pause"):
+                self.after(0, self.current_screen.handle_opponent_pause)
+
+        elif msg_type == "opponent_resume":
+            if hasattr(self.current_screen, "handle_opponent_resume"):
+                self.after(0, self.current_screen.handle_opponent_resume)
+
 
         elif msg_type == "back_to_menu":
             self.show_menu()

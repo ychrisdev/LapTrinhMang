@@ -9,7 +9,6 @@ PORT = 5000
 
 rooms = []
 
-# Mỗi size có 1 phòng chờ
 waiting = {
     3: None,
     10: None
@@ -38,6 +37,9 @@ def handle_client(conn, addr):
                 size = payload["size"]
                 current_size = size
 
+                if size not in waiting:
+                    waiting[size] = None
+
                 if waiting[size] is None:
                     room = Room(size)
                     room.add_player(conn)
@@ -46,7 +48,7 @@ def handle_client(conn, addr):
                     current_room = room
 
                     conn.sendall(encode("waiting", {
-                        "message": f"Waiting for opponent ({size}x{size})..."
+                        "message": f"Đang chờ đối thủ ({size}x{size})..."
                     }))
                 else:
                     room = waiting[size]
@@ -67,8 +69,26 @@ def handle_client(conn, addr):
 
                     waiting[size] = None
 
+            elif msg_type == "pause":
+                if current_room:
+                    current_room.paused_by.add(conn)
+                    for p in current_room.players:
+                        p.sendall(encode("opponent_pause", {}))
+
+            elif msg_type == "resume":
+                if current_room and conn in current_room.paused_by:
+                    current_room.paused_by.remove(conn)
+
+                    if not current_room.is_paused():
+                        for p in current_room.players:
+                            p.sendall(encode("opponent_resume", {}))
+
             elif msg_type == "move":
                 if not current_room or current_room.finished:
+                    continue
+
+                # Nếu phòng đang pause → chặn tuyệt đối
+                if current_room.is_paused():
                     continue
 
                 if conn != current_room.current_player():
@@ -103,18 +123,16 @@ def handle_client(conn, addr):
                         }))
 
                     current_room.finished = True
-                    current_room.rematch_votes.clear()   # ⭐ THÊM
+                    current_room.rematch_votes.clear()
                     continue
-
 
                 if check_draw(current_room.board):
                     for p in current_room.players:
                         p.sendall(encode("draw", {}))
 
                     current_room.finished = True
-                    current_room.rematch_votes.clear()   # ⭐ THÊM
+                    current_room.rematch_votes.clear()
                     continue
-
 
                 current_room.switch_turn()
 
@@ -122,7 +140,6 @@ def handle_client(conn, addr):
                 if current_room and current_room.finished:
                     current_room.rematch_votes[conn] = True
 
-                    # Nếu cả 2 đồng ý
                     if all(vote is True for vote in current_room.rematch_votes.values()):
                         current_room.reset()
                         current_room.reset_votes()
@@ -142,21 +159,18 @@ def handle_client(conn, addr):
                 if not current_room:
                     continue
 
-                # Gửi về menu cả 2 client
                 for p in current_room.players:
                     try:
                         p.sendall(encode("back_to_menu", {}))
                     except:
                         pass
 
-                # Dọn phòng
                 if current_room in rooms:
                     rooms.remove(current_room)
                 if current_size and waiting.get(current_size) == current_room:
                     waiting[current_size] = None
 
                 current_room = None
-
 
     except Exception as e:
         print(f"[!] Error with {addr}: {e}")
@@ -165,6 +179,13 @@ def handle_client(conn, addr):
         print(f"[-] Client disconnected: {addr}")
 
         if current_room:
+            for p in current_room.players:
+                if p != conn:
+                    try:
+                        p.sendall(encode("back_to_menu", {}))
+                    except:
+                        pass
+
             if current_room in rooms:
                 rooms.remove(current_room)
 

@@ -1,4 +1,3 @@
-# server/room.py
 from game_logic import create_board
 
 class Room:
@@ -6,17 +5,15 @@ class Room:
         self.size = size
         self.players = []
         self.board = create_board(size)
-        self.turn = 0          # 0: X, 1: O
-        self.finished = False  # ván đã kết thúc chưa
-        self.rematch_votes = {}  
-        self.rematch_rejected = False
+        self.turn = 0
+        self.finished = False
+        self.rematch_votes = {}
+        self.paused_by = set()
 
     def add_player(self, conn):
         if len(self.players) < 2:
             self.players.append(conn)
-
-    def is_full(self):
-        return len(self.players) == 2
+            self.rematch_votes[conn] = False
 
     def current_player(self):
         return self.players[self.turn]
@@ -29,9 +26,13 @@ class Room:
 
     def reset_votes(self):
         for p in self.players:
-            self.rematch_votes[p] = None
+            self.rematch_votes[p] = False
+
+    def is_paused(self):
+        return len(self.paused_by) > 0
 
     def reset(self):
         self.board = create_board(self.size)
         self.turn = 0
         self.finished = False
+        self.paused_by.clear()
