@@ -214,27 +214,27 @@ class RPSClientGUI:
 
         tk.Label(
             pause_window,
-            text="TAM DUNG GAME",
+            text="TẠM DỪNG GAME",
             font=("Arial", 12, "bold")
         ).pack(pady=15)
 
         tk.Button(
             pause_window,
-            text="LICH SU",
+            text="LỊCH SỬ",
             width=15,
             command=self.show_history
         ).pack(pady=5)
 
         tk.Button(
             pause_window,
-            text="TIEP TUC",
+            text="TIẾP TỤC",
             width=15,
             command=pause_window.destroy
         ).pack(pady=5)
 
         tk.Button(
             pause_window,
-            text="THOAT",
+            text="THOÁT",
             width=15,
             command=self.exit_game
         ).pack(pady=5)
@@ -285,7 +285,7 @@ class RPSClientGUI:
 
         tk.Button(
             history_window,
-            text="QUAY LAI",
+            text="QUAY LẠI",
             width=12,
             command=history_window.destroy
         ).pack(pady=0, side="top")
