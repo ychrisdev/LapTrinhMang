@@ -13,6 +13,7 @@ class App(tk.Tk):
         self.current_screen = None
 
         self.show_menu()
+        self.is_leaving = False
 
     def clear_screen(self):
         if self.current_screen:
@@ -72,4 +73,20 @@ class App(tk.Tk):
 
 
         elif msg_type == "back_to_menu":
+            if isinstance(self.current_screen, GameScreen):
+                if self.is_leaving:
+                    self.is_leaving = False
+                    self.show_menu()
+                    return
+
+                try:
+                    self.current_screen.status.config(
+                        text="Đối thủ đã thoát ván đấu",
+                        fg="red"
+                    )
+                    self.after(3000, self.show_menu)
+                    return
+                except:
+                    pass
+
             self.show_menu()

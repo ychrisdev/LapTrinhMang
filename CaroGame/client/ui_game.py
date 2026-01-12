@@ -129,17 +129,27 @@ class GameScreen(tk.Frame):
     def handle_win(self, winner):
         if winner == self.symbol:
             self.score["me"] += 1
-            messagebox.showinfo("Kết quả", "Bạn thắng!")
+            self.status.config(
+                text="Bạn đã thắng ván này!",
+                fg="green"
+            )
         else:
             self.score["op"] += 1
-            messagebox.showinfo("Kết quả", "Bạn thua!")
+            self.status.config(
+                text="Bạn đã thua ván này!",
+                fg="red"
+            )
 
         self.update_score()
-        self.ask_rematch()
+        self.after(300, self.ask_rematch)
+
 
     def handle_draw(self):
-        messagebox.showinfo("Kết quả", "Hòa!")
-        self.ask_rematch()
+        self.status.config(
+            text="Ván đấu hòa!",
+            fg="orange"
+        )
+        self.after(300, self.ask_rematch)
 
     def ask_rematch(self):
         if messagebox.askyesno("Tiếp tục?", "Chơi lại ván mới?"):
@@ -170,6 +180,7 @@ class GameScreen(tk.Frame):
         self.app.client.send("resume", {})
 
     def leave(self):
+        self.app.is_leaving = True
         self.app.client.send("leave_room", {})
 
     def handle_opponent_pause(self):
