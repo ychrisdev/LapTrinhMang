@@ -1,4 +1,3 @@
-# client/ui_game.py
 import tkinter as tk
 from tkinter import messagebox
 
@@ -11,14 +10,12 @@ class GameScreen(tk.Frame):
         self.size = size
         self.symbol = symbol
         self.your_turn = your_turn
-
-        self.paused = False
-        self.opponent_paused = False
+        self.menu_open = False
 
         self.board = [[None] * size for _ in range(size)]
         self.score = score if score else {"me": 0, "op": 0}
 
-        # Thanh trên
+        # ===== THANH TRÊN =====
         top_bar = tk.Frame(self)
         top_bar.pack(fill="x", pady=5)
 
@@ -28,26 +25,32 @@ class GameScreen(tk.Frame):
         self.menu_btn = tk.Button(top_bar, text="☰", command=self.toggle_menu)
         self.menu_btn.pack(side="right", padx=10)
 
-        # Hiển thị tỉ số
+        # ===== TỈ SỐ =====
         self.score_label = tk.Label(
             self,
-            text="Tỉ số\nBạn 0 - 0 Đối thủ",
             font=("Arial", 13, "bold"),
-            justify="center",
-            anchor="center"
+            justify="center"
         )
         self.score_label.pack(pady=5)
 
-        # Menu nổi
-        self.menu_frame = tk.Frame(self, bd=2, relief="ridge")
-        self.menu_frame.pack(pady=5)
-        self.menu_frame.pack_forget()
+        self.update_score()
+        # ===== MENU NỔI =====
+        self.menu_frame = tk.Frame(self, bd=2, relief="ridge", bg="white")
+        self.menu_frame.place_forget()
 
-        tk.Button(self.menu_frame, text="Tiếp tục", width=15, command=self.resume).pack(pady=2)
-        tk.Button(self.menu_frame, text="Tạm dừng", width=15, command=self.pause).pack(pady=2)
-        tk.Button(self.menu_frame, text="Thoát", width=15, command=self.leave).pack(pady=2)
 
-        # Bàn cờ
+
+        tk.Button(
+            self.menu_frame, text="Tiếp tục",
+            width=15, command=self.resume
+        ).pack(pady=4)
+
+        tk.Button(
+            self.menu_frame, text="Thoát",
+            width=15, command=self.leave
+        ).pack(pady=4)
+
+        # ===== BÀN CỜ =====
         self.canvas = tk.Canvas(
             self,
             width=size * CELL_SIZE,
@@ -61,18 +64,9 @@ class GameScreen(tk.Frame):
         self.update_status()
         self.draw_grid()
 
+    # ================= STATUS =================
     def update_status(self):
-        if self.paused:
-            self.status.config(
-                text="Bạn đang tạm dừng ván đấu",
-                fg="gray"
-            )
-        elif self.opponent_paused:
-            self.status.config(
-                text="Đối thủ đang tạm dừng ván đấu",
-                fg="red"
-            )
-        elif self.your_turn:
+        if self.your_turn:
             self.status.config(
                 text=f"Bạn ({self.symbol}) - Lượt của bạn",
                 fg="green"
@@ -83,28 +77,28 @@ class GameScreen(tk.Frame):
                 fg="blue"
             )
 
+    # ================= SCORE =================
     def update_score(self):
         self.score_label.config(
-            text=f"Tỉ số\nBạn {self.score['me']} - {self.score['op']} Đối thủ",
-            font=("Arial", 13, "bold"),
-            justify="center",
-            anchor="center"
+            text=f"Tỉ số\nBạn {self.score['me']} - {self.score['op']} Đối thủ"
         )
 
+    # ================= GRID =================
     def draw_grid(self):
         for i in range(self.size + 1):
             p = i * CELL_SIZE
             self.canvas.create_line(p, 0, p, self.size * CELL_SIZE)
             self.canvas.create_line(0, p, self.size * CELL_SIZE, p)
 
+    # ================= CLICK =================
     def on_click(self, event):
-        if self.paused or self.opponent_paused or not self.your_turn:
+        if self.menu_open or not self.your_turn:
             return
 
         x = event.y // CELL_SIZE
         y = event.x // CELL_SIZE
 
-        if x < 0 or y < 0 or x >= self.size or y >= self.size:
+        if not (0 <= x < self.size and 0 <= y < self.size):
             return
 
         if self.board[x][y] is not None:
@@ -114,41 +108,36 @@ class GameScreen(tk.Frame):
         self.your_turn = False
         self.update_status()
 
+    # ================= UPDATE =================
     def handle_update(self, x, y, symbol):
         self.board[x][y] = symbol
 
         cx = y * CELL_SIZE + CELL_SIZE // 2
         cy = x * CELL_SIZE + CELL_SIZE // 2
-
         self.canvas.create_text(cx, cy, text=symbol, font=("Arial", 18))
 
         if symbol != self.symbol:
             self.your_turn = True
             self.update_status()
 
+    # ================= KẾT THÚC =================
     def handle_win(self, winner):
         if winner == self.symbol:
             self.score["me"] += 1
-            self.status.config(
-                text="Bạn đã thắng ván này!",
-                fg="green"
-            )
+            self.status.config(text="Bạn đã thắng ván này!", fg="green")
         else:
             self.score["op"] += 1
-            self.status.config(
-                text="Bạn đã thua ván này!",
-                fg="red"
-            )
+            self.status.config(text="Bạn đã thua ván này!", fg="red")
+
+        # 🔥 ĐỒNG BỘ VỀ APP
+        self.app.score = self.score
 
         self.update_score()
         self.after(300, self.ask_rematch)
 
 
     def handle_draw(self):
-        self.status.config(
-            text="Ván đấu hòa!",
-            fg="orange"
-        )
+        self.status.config(text="Ván đấu hòa!", fg="orange")
         self.after(300, self.ask_rematch)
 
     def ask_rematch(self):
@@ -157,36 +146,35 @@ class GameScreen(tk.Frame):
         else:
             self.app.client.send("leave_room", {})
 
+    # ================= MENU =================
     def toggle_menu(self):
-        if self.menu_frame.winfo_ismapped():
-            self.menu_frame.pack_forget()
+        if self.menu_open:
+            self.menu_frame.place_forget()
+            self.menu_open = False
         else:
-            self.menu_frame.pack(pady=5)
+            self.menu_btn.update_idletasks()
+            self.menu_frame.update_idletasks()
 
-    def pause(self):
-        if self.paused:
-            return
-        self.paused = True
-        self.menu_frame.pack_forget()
-        self.update_status()
-        self.app.client.send("pause", {})
+            bx = self.menu_btn.winfo_rootx()
+            by = self.menu_btn.winfo_rooty() + self.menu_btn.winfo_height()
+
+            fx = self.winfo_rootx()
+            fy = self.winfo_rooty()
+
+            x = bx - fx + self.menu_btn.winfo_width() - self.menu_frame.winfo_reqwidth()
+            y = by - fy
+
+            self.menu_frame.place(x=x, y=y)
+            self.menu_open = True
+
+
 
     def resume(self):
-        if not self.paused:
-            return
-        self.paused = False
-        self.menu_frame.pack_forget()
+        self.menu_frame.place_forget()
+        self.menu_open = False
         self.update_status()
-        self.app.client.send("resume", {})
+
 
     def leave(self):
         self.app.is_leaving = True
         self.app.client.send("leave_room", {})
-
-    def handle_opponent_pause(self):
-        self.opponent_paused = True
-        self.update_status()
-
-    def handle_opponent_resume(self):
-        self.opponent_paused = False
-        self.update_status()

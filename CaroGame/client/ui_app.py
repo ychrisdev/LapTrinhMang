@@ -11,7 +11,9 @@ class App(tk.Tk):
 
         self.client = client
         self.current_screen = None
-
+        
+        self.score = {"me": 0, "op": 0}
+        
         self.show_menu()
         self.is_leaving = False
 
@@ -34,10 +36,6 @@ class App(tk.Tk):
                 self.current_screen.set_status(data["message"])
 
         elif msg_type == "start_game":
-            old_score = None
-            if isinstance(self.current_screen, GameScreen):
-                old_score = self.current_screen.score
-
             self.clear_screen()
             self.current_screen = GameScreen(
                 self,
@@ -45,9 +43,10 @@ class App(tk.Tk):
                 data["size"],
                 data["symbol"],
                 data["your_turn"],
-                score=old_score
+                score=self.score      # 🔥 LẤY SCORE TỪ APP
             )
             self.current_screen.pack(fill="both", expand=True)
+
 
         elif msg_type == "update":
             if hasattr(self.current_screen, "handle_update"):
@@ -73,6 +72,7 @@ class App(tk.Tk):
 
 
         elif msg_type == "back_to_menu":
+            self.score = {"me": 0, "op": 0}
             if isinstance(self.current_screen, GameScreen):
                 if self.is_leaving:
                     self.is_leaving = False
