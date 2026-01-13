@@ -256,12 +256,24 @@ class RPSClientGUI:
         self.pause_window.grab_release()
         history_window.grab_set()
 
+        # Frame chứa text và scrollbar
+        text_container = tk.Frame(history_window)
+        text_container.pack(padx=10, pady=(10, 0), fill="both", expand=True)
+
+        # Scrollbar
+        scrollbar = tk.Scrollbar(text_container)
+        scrollbar.pack(side="right", fill="y")
+
+        # Text widget
         text = tk.Text(
-            history_window,
+            text_container,
             height=12,
-            font=("Consolas", 10)
+            font=("Consolas", 10),
+            yscrollcommand=scrollbar.set
         )
-        text.pack(padx=5, pady=5, fill="both")
+        text.pack(side="left", fill="both", expand=True)
+
+        scrollbar.config(command=text.yview)
 
         # ===== HEADER =====
         header = (
@@ -281,14 +293,26 @@ class RPSClientGUI:
                 f"{h['client_score']}-{h['server_score']}\n"
             )
 
-        text.pack(padx=5, pady=5, side="top", fill="x")
+        # Khóa Text widget để không thể chỉnh sửa
+        text.config(state="disabled")
 
+        # Khung màu xám liền kề
+        btn_area = tk.Frame(history_window, height=50, bg="#e0e0e0")
+        btn_area.pack(side="bottom", fill="x", padx=10, pady=(0, 10))
+        btn_area.pack_propagate(False)
+
+        def back():
+            history_window.grab_release()
+            self.pause_window.grab_set()
+            history_window.destroy()
+
+        # NÚT NẰM GIỮA KHUNG
         tk.Button(
-            history_window,
+            btn_area,
             text="QUAY LẠI",
-            width=12,
-            command=history_window.destroy
-        ).pack(pady=0, side="top")
+            width=15,
+            command=back
+        ).pack(expand=True)
 
     def exit_game(self):
         try:
