@@ -207,10 +207,12 @@ class RPSClientGUI:
         self.pause_window = pause_window
 
         pause_window.title("Tam dung")
-        pause_window.geometry("300x200")
         pause_window.resizable(False, False)
         pause_window.transient(self.root)
         pause_window.grab_set()
+
+        self.center_window(pause_window, 300, 200)
+
 
         tk.Label(
             pause_window,
@@ -241,17 +243,14 @@ class RPSClientGUI:
 
     def show_history(self):
         if not self.history:
-            messagebox.showinfo(
-                "Lich su",
-                "Chua co nuoc di nao.",
-                parent=self.pause_window
-            )
+            self.show_empty_history_message()
             return
+
 
         history_window = tk.Toplevel(self.root)
         history_window.title("Lich su")
-        history_window.geometry("420x320")
         history_window.resizable(False, False)
+        self.center_window(history_window, 420, 320)
 
         self.pause_window.grab_release()
         history_window.grab_set()
@@ -321,6 +320,36 @@ class RPSClientGUI:
             pass
         self.client_socket.close()
         self.root.destroy()
+
+    def center_window(self, window, w, h):
+        self.root.update_idletasks()
+        x = self.root.winfo_rootx() + (self.root.winfo_width() // 2) - (w // 2)
+        y = self.root.winfo_rooty() + (self.root.winfo_height() // 2) - (h // 2)
+        window.geometry(f"{w}x{h}+{x}+{y}")
+
+    def show_empty_history_message(self):
+        win = tk.Toplevel(self.root)
+        win.title("Lịch sử")
+        win.resizable(False, False)
+        win.transient(self.pause_window)
+        win.grab_set()
+
+        # CĂN GIỮA TRÊN GAME
+        self.center_window(win, 300, 150)
+
+        tk.Label(
+            win,
+            text="Chưa có nước đi nào.",
+            font=("Arial", 11),
+            justify="center"
+        ).pack(expand=True, pady=30)
+
+        tk.Button(
+            win,
+            text="OK",
+            width=10,
+            command=win.destroy
+        ).pack(pady=10)
 
 
 if __name__ == "__main__":
