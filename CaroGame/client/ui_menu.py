@@ -28,20 +28,50 @@ class MenuScreen(tk.Frame):
             font=("Arial", 14)
         ).pack(anchor="w", pady=5)
 
-        tk.Button(
+        # ===== NÚT BẮT ĐẦU =====
+        self.btn_start = tk.Button(
             self, text="Bắt đầu chơi",
             font=("Arial", 16),
             width=20, height=2,
             command=self.quick_play
-        ).pack(pady=30)
+        )
+        self.btn_start.pack(pady=20)
+
+        # ===== NÚT HỦY =====
+        self.btn_cancel = tk.Button(
+            self, text="Hủy",
+            font=("Arial", 14),
+            width=10,
+            command=self.cancel_search
+        )
+        # Ẩn lúc đầu
+        self.btn_cancel.pack(pady=5)
+        self.btn_cancel.pack_forget()
 
         self.status = tk.Label(self, text="", font=("Arial", 12))
         self.status.pack(pady=10)
 
     def quick_play(self):
         size = self.size_var.get()
+
+        self.btn_start.config(state="disabled")
+        self.btn_cancel.pack()  # 🔥 hiện nút Hủy
+
         self.status.config(text="Đang tìm đối thủ...")
         self.client.send("quick_play", {"size": size})
 
+    def cancel_search(self):
+        # Gửi thông báo rời phòng chờ
+        self.client.send("leave_room", {})
+
+        self.status.config(text="Đã hủy tìm đối thủ.")
+        self.btn_start.config(state="normal")
+        self.btn_cancel.pack_forget()  # 🔥 ẩn nút Hủy
+
     def set_status(self, text):
         self.status.config(text=text)
+
+        # Khi quay menu / bị out
+        if "menu" in text.lower() or "thoát" in text.lower():
+            self.btn_start.config(state="normal")
+            self.btn_cancel.pack_forget()
