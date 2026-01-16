@@ -184,12 +184,61 @@ class GameScreen(tk.Frame):
     def leave(self):
         self.app.is_leaving = True
         self.app.client.send("leave_room", {})
-        
+
     def show_rules(self):
-        if self.size == 3:
-            rule_text = "Luật chơi:\n\nBàn cờ 3 x 3\n→ 3 ô liên tiếp để thắng"
-        else:
-            rule_text = "Luật chơi:\n\nBàn cờ 10 x 10\n→ 5 ô liên tiếp để thắng"
+        rule_win = "3 ô liên tiếp" if self.size == 3 else "5 ô liên tiếp"
+        board_size = "3 x 3" if self.size == 3 else "10 x 10"
 
-        messagebox.showinfo("Luật chơi", rule_text)
+        # ===== CỬA SỔ LUẬT CHƠI =====
+        rule_window = tk.Toplevel(self)
+        rule_window.title("Luật chơi")
+        rule_window.geometry("320x280")
+        rule_window.resizable(False, False)
+        rule_window.transient(self)
+        rule_window.grab_set()
 
+        # ===== KHUNG CHÍNH =====
+        container = tk.Frame(rule_window, padx=20, pady=15)
+        container.pack(fill="both", expand=True)
+
+        # ===== TIÊU ĐỀ =====
+        tk.Label(
+            container,
+            text="LUẬT CHƠI CARO",
+            font=("Arial", 16, "bold"),
+            fg="#2c3e50"
+        ).pack(pady=(0, 10))
+
+        # ===== NỘI DUNG =====
+        tk.Label(
+            container,
+            text=f"Bàn cờ: {board_size}",
+            font=("Arial", 13)
+        ).pack(pady=5)
+
+        tk.Label(
+            container,
+            text=f"Điều kiện thắng:",
+            font=("Arial", 13, "bold")
+        ).pack(pady=(10, 2))
+
+        tk.Label(
+            container,
+            text=rule_win,
+            font=("Arial", 14),
+            fg="#e74c3c"
+        ).pack(pady=5)
+
+        # ===== NÚT ĐÓNG =====
+        tk.Button(
+            container,
+            text="Đóng",
+            font=("Arial", 12),
+            width=14,
+            height=1,
+            command=rule_window.destroy
+        ).pack(pady=15)
+
+        # Đóng menu nổi sau khi mở luật
+        self.menu_frame.place_forget()
+        self.menu_open = False
