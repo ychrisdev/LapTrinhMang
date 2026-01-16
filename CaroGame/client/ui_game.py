@@ -46,6 +46,11 @@ class GameScreen(tk.Frame):
         ).pack(pady=4)
 
         tk.Button(
+            self .menu_frame, text="luật chơi",
+            width=15, command=self .show_rules
+        ) .pack(pady=4)
+
+        tk.Button(
             self.menu_frame, text="Thoát",
             width=15, command=self.leave
         ).pack(pady=4)
@@ -179,3 +184,12 @@ class GameScreen(tk.Frame):
     def leave(self):
         self.app.is_leaving = True
         self.app.client.send("leave_room", {})
+        
+    def show_rules(self):
+        if self.size == 3:
+            rule_text = "Luật chơi:\n\nBàn cờ 3 x 3\n→ 3 ô liên tiếp để thắng"
+        else:
+            rule_text = "Luật chơi:\n\nBàn cờ 10 x 10\n→ 5 ô liên tiếp để thắng"
+
+        messagebox.showinfo("Luật chơi", rule_text)
+
