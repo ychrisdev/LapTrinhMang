@@ -165,6 +165,7 @@ class GameScreen(tk.Frame):
             y = by - fy
 
             self.menu_frame.place(x=x, y=y)
+            self.menu_frame.lift()   # ÉP MENU NỔI LÊN TRÊN CANVAS
             self.menu_open = True
 
 
