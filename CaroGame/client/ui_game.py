@@ -1,6 +1,6 @@
 import tkinter as tk
 
-CELL_SIZE = 40
+
 
 class GameScreen(tk.Frame):
     def __init__(self, master, app, size, symbol, your_turn, score=None):
@@ -12,6 +12,14 @@ class GameScreen(tk.Frame):
         self.menu_open = False
         self.opponent_left = False
         self.rematch_chosen = False
+
+        # ===== KÍCH THƯỚC THEO CHẾ ĐỘ =====
+        if size == 3:
+            self.cell_size = 120      # bàn 3x3 TO
+            self.xo_font_size = 64
+        else:
+            self.cell_size = 50       # bàn 10x10
+            self.xo_font_size = 28
 
         self.board = [[None] * size for _ in range(size)]
         self.score = score if score else {"me": 0, "op": 0}
@@ -61,10 +69,12 @@ class GameScreen(tk.Frame):
         # ===== BÀN CỜ =====
         self.canvas = tk.Canvas(
             self,
-            width=size * CELL_SIZE,
-            height=size * CELL_SIZE,
-            bg="white"
+            width=size * self.cell_size,
+            height=size * self.cell_size,
+            bg="#E8D5B7",            # màu gỗ sáng
+            highlightthickness=0
         )
+
         self.canvas.pack()
 
         self.canvas.bind("<Button-1>", self.on_click)
@@ -95,17 +105,23 @@ class GameScreen(tk.Frame):
     # ================= GRID =================
     def draw_grid(self):
         for i in range(self.size + 1):
-            p = i * CELL_SIZE
-            self.canvas.create_line(p, 0, p, self.size * CELL_SIZE)
-            self.canvas.create_line(0, p, self.size * CELL_SIZE, p)
+            p = i * self.cell_size
+            self.canvas.create_line(
+                p, 0, p, self.size * self.cell_size,
+                fill="#8B5A2B", width=2
+            )
+            self.canvas.create_line(
+                0, p, self.size * self.cell_size, p,
+                fill="#8B5A2B", width=2
+            )
 
     # ================= CLICK =================
     def on_click(self, event):
         if self.menu_open or not self.your_turn or hasattr(self, "overlay"):
             return
 
-        x = event.y // CELL_SIZE
-        y = event.x // CELL_SIZE
+        x = event.y // self.cell_size
+        y = event.x // self.cell_size
 
         if not (0 <= x < self.size and 0 <= y < self.size):
             return
@@ -121,9 +137,18 @@ class GameScreen(tk.Frame):
     def handle_update(self, x, y, symbol):
         self.board[x][y] = symbol
 
-        cx = y * CELL_SIZE + CELL_SIZE // 2
-        cy = x * CELL_SIZE + CELL_SIZE // 2
-        self.canvas.create_text(cx, cy, text=symbol, font=("Arial", 18))
+        cx = y * self.cell_size + self.cell_size // 2
+        cy = x * self.cell_size + self.cell_size // 2
+        color = "#c0392b" if symbol == "X" else "#2980b9"
+
+        self.canvas.create_text(
+            cx,
+            cy,
+            text=symbol,
+            font=("Arial", self.xo_font_size, "bold"),
+            fill=color
+        )
+
 
         if symbol != self.symbol:
             self.your_turn = True
@@ -217,8 +242,8 @@ class GameScreen(tk.Frame):
         # Xóa canvas và vẽ lại
         self.canvas.delete("all")
         self.canvas.config(
-            width=size * CELL_SIZE,
-            height=size * CELL_SIZE
+            width=size * self.cell_size,
+            height=size * self.cell_size
         )
         self.draw_grid()
 
