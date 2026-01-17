@@ -1,5 +1,4 @@
 import tkinter as tk
-from tkinter import messagebox
 
 CELL_SIZE = 40
 
@@ -11,6 +10,8 @@ class GameScreen(tk.Frame):
         self.symbol = symbol
         self.your_turn = your_turn
         self.menu_open = False
+        self.opponent_left = False
+        self.rematch_chosen = False
 
         self.board = [[None] * size for _ in range(size)]
         self.score = score if score else {"me": 0, "op": 0}
@@ -37,8 +38,6 @@ class GameScreen(tk.Frame):
         # ===== MENU NỔI =====
         self.menu_frame = tk.Frame(self, bd=2, relief="ridge", bg="white")
         self.menu_frame.place_forget()
-
-
 
         tk.Button(
             self.menu_frame, text="Tiếp tục",
@@ -146,10 +145,133 @@ class GameScreen(tk.Frame):
         self.after(300, self.ask_rematch)
 
     def ask_rematch(self):
-        if messagebox.askyesno("Tiếp tục?", "Chơi lại ván mới?"):
-            self.app.client.send("rematch", {})
-        else:
-            self.app.client.send("leave_room", {})
+        self.rematch_chosen = False
+        self.rematch_win = tk.Toplevel(self)
+        self.rematch_win.title("Tiếp tục?")
+        self.rematch_win.geometry("260x140")
+        self.rematch_win.resizable(False, False)
+        self.rematch_win.transient(self)
+        self.rematch_win.grab_set()
+
+        # ===== CĂN GIỮA THEO BÀN CỜ =====
+        self.update_idletasks()
+        self.rematch_win.update_idletasks()
+
+        board_x = self.canvas.winfo_rootx()
+        board_y = self.canvas.winfo_rooty()
+        board_w = self.canvas.winfo_width()
+        board_h = self.canvas.winfo_height()
+
+        win_w = self.rematch_win.winfo_width()
+        win_h = self.rematch_win.winfo_height()
+
+        x = board_x + (board_w - win_w) // 2
+        y = board_y + (board_h - win_h) // 2
+
+        self.rematch_win.geometry(f"+{x}+{y}")
+
+        # ===== NỘI DUNG =====
+        tk.Label(
+            self.rematch_win,
+            text="Chơi lại ván mới?",
+            font=("Arial", 12)
+        ).pack(pady=20)
+
+        btn_frame = tk.Frame(self.rematch_win)
+        btn_frame.pack(pady=10)
+
+        tk.Button(
+            btn_frame, text="Có", width=8,
+            command=self.on_yes_rematch
+        ).pack(side="left", padx=10)
+
+        tk.Button(
+            btn_frame, text="Không", width=8,
+            command=self.on_no_rematch
+        ).pack(side="right", padx=10)
+
+    def reset_board(self, size, symbol, your_turn):
+        self.size = size
+        self.symbol = symbol
+        self.your_turn = your_turn
+        self.opponent_left = False
+        self.menu_open = False
+
+        # Reset dữ liệu
+        self.board = [[None] * size for _ in range(size)]
+
+        # Xóa canvas và vẽ lại
+        self.canvas.delete("all")
+        self.canvas.config(
+            width=size * CELL_SIZE,
+            height=size * CELL_SIZE
+        )
+        self.draw_grid()
+
+        self.update_status()
+
+
+    def handle_opponent_left(self):
+        self.opponent_left = True
+        self.your_turn = False
+
+        self.status.config(
+            text="Đối thủ đã thoát.",
+            fg="red"
+        )
+
+        # Nếu đang ở giai đoạn rematch
+        if hasattr(self, "rematch_win"):
+            # Nếu người này CHƯA chọn gì → cho chọn Yes/No
+            if not self.rematch_chosen:
+                try:
+                    self.rematch_win.destroy()
+                except:
+                    pass
+                del self.rematch_win
+
+                self.ask_rematch()
+                return
+
+            # Nếu đã chọn (đã bấm Yes trước đó)
+            # → chỉ thông báo + delay rồi out
+            try:
+                self.rematch_win.destroy()
+            except:
+                pass
+
+            self.after(1000, lambda: self.app.client.send("leave_room", {}))
+            return
+
+        # Đối thủ thoát giữa ván
+        self.after(1000, lambda: self.app.client.send("leave_room", {}))
+
+
+    def on_yes_rematch(self):
+        self.rematch_chosen = True
+
+        if self.opponent_left:
+            self.status.config(
+                text="Không còn đối thủ. Đang quay về menu...",
+                fg="red"
+            )
+            if hasattr(self, "rematch_win"):
+                self.rematch_win.destroy()
+            self.after(1000, lambda: self.app.client.send("leave_room", {}))
+            return
+
+        if hasattr(self, "rematch_win"):
+            self.rematch_win.destroy()
+
+        self.app.client.send("rematch", {})
+
+
+    def on_no_rematch(self):
+        self.rematch_chosen = True
+        if hasattr(self, "rematch_win"):
+            self.rematch_win.destroy()
+        self.app.client.send("leave_room", {})
+
 
     # ================= MENU =================
     def toggle_menu(self):
@@ -178,6 +300,14 @@ class GameScreen(tk.Frame):
     def resume(self):
         self.menu_frame.place_forget()
         self.menu_open = False
+
+        if self.opponent_left:
+            self.status.config(
+                text="Không còn đối thủ. Bạn phải thoát để tìm trận mới.",
+                fg="red"
+            )
+            return
+
         self.update_status()
 
 

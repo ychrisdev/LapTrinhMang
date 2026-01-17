@@ -36,16 +36,25 @@ class App(tk.Tk):
                 self.current_screen.set_status(data["message"])
 
         elif msg_type == "start_game":
-            self.clear_screen()
-            self.current_screen = GameScreen(
-                self,
-                self,
-                data["size"],
-                data["symbol"],
-                data["your_turn"],
-                score=self.score      # 🔥 LẤY SCORE TỪ APP
-            )
-            self.current_screen.pack(fill="both", expand=True)
+            # Nếu đang ở màn hình GameScreen → chỉ reset
+            if isinstance(self.current_screen, GameScreen):
+                self.current_screen.reset_board(
+                    data["size"],
+                    data["symbol"],
+                    data["your_turn"]
+                )
+            else:
+                # Lần đầu vào game → tạo mới
+                self.clear_screen()
+                self.current_screen = GameScreen(
+                    self,
+                    self,
+                    data["size"],
+                    data["symbol"],
+                    data["your_turn"],
+                    score=self.score
+                )
+                self.current_screen.pack(fill="both", expand=True)
 
 
         elif msg_type == "update":
@@ -70,23 +79,10 @@ class App(tk.Tk):
             if hasattr(self.current_screen, "handle_opponent_resume"):
                 self.after(0, self.current_screen.handle_opponent_resume)
 
+        elif msg_type == "opponent_left":
+            if isinstance(self.current_screen, GameScreen):
+                self.after(0, self.current_screen.handle_opponent_left)
 
         elif msg_type == "back_to_menu":
             self.score = {"me": 0, "op": 0}
-            if isinstance(self.current_screen, GameScreen):
-                if self.is_leaving:
-                    self.is_leaving = False
-                    self.show_menu()
-                    return
-
-                try:
-                    self.current_screen.status.config(
-                        text="Đối thủ đã thoát ván đấu",
-                        fg="red"
-                    )
-                    self.after(3000, self.show_menu)
-                    return
-                except:
-                    pass
-
             self.show_menu()

@@ -13,7 +13,11 @@ class Room:
     def add_player(self, conn):
         if len(self.players) < 2:
             self.players.append(conn)
-            self.rematch_votes[conn] = False
+            self.rematch_votes[conn] = None
+
+    def reset_votes(self):
+        for p in self.players:
+            self.rematch_votes[p] = None
 
     def current_player(self):
         return self.players[self.turn]
@@ -23,10 +27,6 @@ class Room:
 
     def get_symbol(self, conn):
         return "X" if self.players[0] == conn else "O"
-
-    def reset_votes(self):
-        for p in self.players:
-            self.rematch_votes[p] = False
 
     def is_paused(self):
         return len(self.paused_by) > 0

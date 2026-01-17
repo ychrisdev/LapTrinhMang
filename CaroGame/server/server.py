@@ -123,7 +123,7 @@ def handle_client(conn, addr):
                         }))
 
                     current_room.finished = True
-                    current_room.rematch_votes.clear()
+                    current_room.reset_votes()
                     continue
 
                 if check_draw(current_room.board):
@@ -131,7 +131,7 @@ def handle_client(conn, addr):
                         p.sendall(encode("draw", {}))
 
                     current_room.finished = True
-                    current_room.rematch_votes.clear()
+                    current_room.reset_votes()
                     continue
 
                 current_room.switch_turn()
@@ -140,9 +140,11 @@ def handle_client(conn, addr):
                 if current_room and current_room.finished:
                     current_room.rematch_votes[conn] = True
 
-                    if all(vote is True for vote in current_room.rematch_votes.values()):
+                    # Nếu cả 2 đều Yes → chơi lại
+                    if all(v is True for v in current_room.rematch_votes.values()):
                         current_room.reset()
                         current_room.reset_votes()
+
                         p1, p2 = current_room.players
                         p1.sendall(encode("start_game", {
                             "size": current_room.size,
@@ -159,12 +161,26 @@ def handle_client(conn, addr):
                 if not current_room:
                     continue
 
-                for p in current_room.players:
+                # Người này chọn NO
+                current_room.rematch_votes[conn] = False
+
+                # Tìm người còn lại
+                others = [p for p in current_room.players if p != conn]
+
+                # Người bấm NO → về menu ngay
+                try:
+                    conn.sendall(encode("back_to_menu", {}))
+                except:
+                    pass
+
+                # Người còn lại chỉ nhận thông báo đối thủ đã thoát
+                for p in others:
                     try:
-                        p.sendall(encode("back_to_menu", {}))
+                        p.sendall(encode("opponent_left", {}))
                     except:
                         pass
 
+                # Dọn phòng
                 if current_room in rooms:
                     rooms.remove(current_room)
                 if current_size and waiting.get(current_size) == current_room:
@@ -178,11 +194,12 @@ def handle_client(conn, addr):
     finally:
         print(f"[-] Client disconnected: {addr}")
 
+        # Chỉ xử lý nếu vẫn còn đang ở trong room
         if current_room:
             for p in current_room.players:
                 if p != conn:
                     try:
-                        p.sendall(encode("back_to_menu", {}))
+                        p.sendall(encode("opponent_left", {}))
                     except:
                         pass
 
