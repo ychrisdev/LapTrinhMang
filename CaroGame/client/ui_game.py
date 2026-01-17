@@ -20,9 +20,6 @@ class GameScreen(tk.Frame):
         top_bar = tk.Frame(self)
         top_bar.pack(fill="x", pady=5)
 
-        self.status = tk.Label(top_bar, text="", font=("Arial", 14))
-        self.status.pack(side="left", padx=10)
-
         self.menu_btn = tk.Button(top_bar, text="☰", command=self.toggle_menu)
         self.menu_btn.pack(side="right", padx=10)
 
@@ -33,6 +30,13 @@ class GameScreen(tk.Frame):
             justify="center"
         )
         self.score_label.pack(pady=5)
+        self.turn_label = tk.Label(
+            self,
+            font=("Arial", 12),
+            fg="#34495e"
+        )
+        self.turn_label.pack(pady=(0, 6))
+
 
         self.update_score()
         # ===== MENU NỔI =====
@@ -71,15 +75,16 @@ class GameScreen(tk.Frame):
     # ================= STATUS =================
     def update_status(self):
         if self.your_turn:
-            self.status.config(
-                text=f"Bạn ({self.symbol}) - Lượt của bạn",
-                fg="green"
+            self.turn_label.config(
+                text="Đến lượt bạn",
+                fg="#27ae60"   # xanh – đang được chơi
             )
         else:
-            self.status.config(
-                text=f"Bạn ({self.symbol}) - Đang chờ đối thủ",
-                fg="blue"
+            self.turn_label.config(
+                text="Đang chờ đối thủ...",
+                fg="#7f8c8d"   # xám – đang chờ
             )
+
 
     # ================= SCORE =================
     def update_score(self):
@@ -96,7 +101,7 @@ class GameScreen(tk.Frame):
 
     # ================= CLICK =================
     def on_click(self, event):
-        if self.menu_open or not self.your_turn:
+        if self.menu_open or not self.your_turn or hasattr(self, "overlay"):
             return
 
         x = event.y // CELL_SIZE
@@ -128,23 +133,32 @@ class GameScreen(tk.Frame):
     def handle_win(self, winner):
         if winner == self.symbol:
             self.score["me"] += 1
-            self.status.config(text="Bạn đã thắng ván này!", fg="green")
+            self.show_center_message("BẠN THẮNG", "#27ae60")
         else:
             self.score["op"] += 1
-            self.status.config(text="Bạn đã thua ván này!", fg="red")
+            self.show_center_message("BẠN THUA", "#e74c3c")
 
-        # 🔥 ĐỒNG BỘ VỀ APP
         self.app.score = self.score
-
         self.update_score()
-        self.after(300, self.ask_rematch)
 
+        # Chỉ hỏi rematch nếu đối thủ chưa rời
+        if not self.opponent_left:
+            self.after(1500, self.ask_rematch)
 
     def handle_draw(self):
-        self.status.config(text="Ván đấu hòa!", fg="orange")
-        self.after(300, self.ask_rematch)
+        self.show_center_message("HÒA", "#f39c12")
+
+        if not self.opponent_left:
+            self.after(1500, self.ask_rematch)
 
     def ask_rematch(self):
+        if hasattr(self, "overlay"):
+            try:
+                self.overlay.destroy()
+            except:
+                pass
+            del self.overlay
+
         self.rematch_chosen = False
         self.rematch_win = tk.Toplevel(self)
         self.rematch_win.title("Tiếp tục?")
@@ -209,55 +223,62 @@ class GameScreen(tk.Frame):
         self.draw_grid()
 
         self.update_status()
-
+        if hasattr(self, "overlay"):
+            try:
+                self.overlay.destroy()
+            except:
+                pass
+            del self.overlay
 
     def handle_opponent_left(self):
         self.opponent_left = True
         self.your_turn = False
 
-        self.status.config(
-            text="Đối thủ đã thoát.",
-            fg="red"
-        )
-
-        # Nếu đang ở giai đoạn rematch
+        # Nếu đang có cửa sổ rematch thì đóng nó
         if hasattr(self, "rematch_win"):
-            # Nếu người này CHƯA chọn gì → cho chọn Yes/No
-            if not self.rematch_chosen:
-                try:
-                    self.rematch_win.destroy()
-                except:
-                    pass
-                del self.rematch_win
-
-                self.ask_rematch()
-                return
-
-            # Nếu đã chọn (đã bấm Yes trước đó)
-            # → chỉ thông báo + delay rồi out
             try:
                 self.rematch_win.destroy()
             except:
                 pass
+            del self.rematch_win
 
-            self.after(1000, lambda: self.app.client.send("leave_room", {}))
+        # Trường hợp người này đã bấm YES rồi
+        if self.rematch_chosen:
+            # Hiển thị thông báo rõ ràng
+            self.show_center_message(
+                "Đối thủ không muốn chơi tiếp\nĐang quay về menu...",
+                "#c0392b"
+            )
+
+            # Chờ một chút cho người chơi đọc xong rồi mới out
+            self.after(1500, lambda: self.app.client.send("leave_room", {}))
             return
 
-        # Đối thủ thoát giữa ván
-        self.after(1000, lambda: self.app.client.send("leave_room", {}))
+        # Trường hợp chưa bấm Yes/No (đang chơi hoặc vừa kết thúc ván)
+        self.show_center_message("ĐỐI THỦ ĐÃ THOÁT", "#c0392b")
 
+        # Nếu đang ở giai đoạn hỏi rematch
+        if hasattr(self, "rematch_win"):
+            try:
+                self.rematch_win.destroy()
+            except:
+                pass
+            del self.rematch_win
+
+        # Cho người chơi nhìn thấy thông báo một chút rồi mới out
+        self.after(1500, lambda: self.app.client.send("leave_room", {}))
 
     def on_yes_rematch(self):
         self.rematch_chosen = True
 
         if self.opponent_left:
-            self.status.config(
-                text="Không còn đối thủ. Đang quay về menu...",
-                fg="red"
+            self.show_center_message(
+                "Không còn đối thủ\nĐang quay về menu...",
+                "#c0392b"
             )
             if hasattr(self, "rematch_win"):
                 self.rematch_win.destroy()
-            self.after(1000, lambda: self.app.client.send("leave_room", {}))
+            self.after(1500, lambda: self.app.client.send("leave_room", {}))
             return
 
         if hasattr(self, "rematch_win"):
@@ -302,9 +323,9 @@ class GameScreen(tk.Frame):
         self.menu_open = False
 
         if self.opponent_left:
-            self.status.config(
-                text="Không còn đối thủ. Bạn phải thoát để tìm trận mới.",
-                fg="red"
+            self.show_center_message(
+                "Không còn đối thủ\nHãy thoát để tìm trận mới",
+                "#c0392b"
             )
             return
 
@@ -372,3 +393,46 @@ class GameScreen(tk.Frame):
         # Đóng menu nổi sau khi mở luật
         self.menu_frame.place_forget()
         self.menu_open = False
+
+    def show_center_message(self, text, color="#2c3e50", subtitle=None):
+        # Xóa overlay cũ nếu có
+        if hasattr(self, "overlay"):
+            try:
+                self.overlay.destroy()
+            except:
+                pass
+            del self.overlay
+
+        self.overlay = tk.Frame(
+            self,
+            bg="#fdfefe",
+            bd=4,
+            relief="ridge"
+        )
+
+        title = tk.Label(
+            self.overlay,
+            text=text,
+            font=("Arial", 22, "bold"),
+            fg=color,
+            bg="#fdfefe",
+            justify="center"
+        )
+        title.pack(padx=35, pady=(22, 8))
+
+        if subtitle:
+            sub = tk.Label(
+                self.overlay,
+                text=subtitle,
+                font=("Arial", 12),
+                fg="#555",
+                bg="#fdfefe",
+                justify="center"
+            )
+            sub.pack(padx=25, pady=(0, 18))
+
+        # Đặt overlay ở giữa bàn cờ
+        self.update_idletasks()
+        x = self.canvas.winfo_x() + self.canvas.winfo_width() // 2
+        y = self.canvas.winfo_y() + self.canvas.winfo_height() // 2
+        self.overlay.place(anchor="center", x=x, y=y)
