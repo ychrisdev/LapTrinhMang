@@ -6,7 +6,7 @@ class App(tk.Tk):
     def __init__(self, client):
         super().__init__()
         self.title("Caro Game")
-        self.geometry("600x700")
+        self.geometry("600x720")
         self.resizable(False, False)
 
         self.client = client

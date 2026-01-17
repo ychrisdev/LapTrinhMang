@@ -9,25 +9,10 @@ class GameScreen(tk.Frame):
         self.size = size
         self.symbol = symbol
         self.your_turn = your_turn
+        self.setup_ui_config()
         self.menu_open = False
         self.opponent_left = False
         self.rematch_chosen = False
-
-        # ===== KÍCH THƯỚC THEO CHẾ ĐỘ =====
-        if size == 3:
-            self.cell_size = 120      # bàn 3x3 TO
-            self.xo_font_size = 64
-            self.score_font = 22
-            self.score_title_font = 18
-            self.score_padx = 18
-            self.score_pady = 8
-        else:
-            self.cell_size = 50       # bàn 10x10
-            self.xo_font_size = 28
-            self.score_font = 16
-            self.score_title_font = 12
-            self.score_padx = 10
-            self.score_pady = 5
 
         self.board = [[None] * size for _ in range(size)]
         self.score = score if score else {"me": 0, "op": 0}
@@ -64,6 +49,13 @@ class GameScreen(tk.Frame):
         row.pack()
 
         # ===== BẠN =====
+        tk.Label(
+            row,
+            text="Bạn",
+            font=("Arial", self.score_title_font),
+            bg="#fdfefe"
+        ).grid(row=0, column=0)
+
         self.me_score_label = tk.Label(
             row,
             text="0",
@@ -72,14 +64,7 @@ class GameScreen(tk.Frame):
             bg="#fdfefe",
             width=3
         )
-        self.me_score_label.grid(row=0, column=0)
-
-        tk.Label(
-            row,
-            text="Bạn",
-            font=("Arial", self.score_title_font),
-            bg="#fdfefe"
-        ).grid(row=1, column=0)
+        self.me_score_label.grid(row=1, column=0)
 
         # ===== PHÂN CÁCH =====
         tk.Label(
@@ -87,9 +72,16 @@ class GameScreen(tk.Frame):
             text="—",
             font=("Arial", self.score_font),
             bg="#fdfefe"
-        ).grid(row=0, column=1, padx=10)
+        ).grid(row=1, column=1, padx=12)
 
         # ===== ĐỐI THỦ =====
+        tk.Label(
+            row,
+            text="Đối thủ",
+            font=("Arial", self.score_title_font),
+            bg="#fdfefe"
+        ).grid(row=0, column=2)
+
         self.op_score_label = tk.Label(
             row,
             text="0",
@@ -98,22 +90,16 @@ class GameScreen(tk.Frame):
             bg="#fdfefe",
             width=3
         )
-        self.op_score_label.grid(row=0, column=2)
-
-        tk.Label(
-            row,
-            text="Đối thủ",
-            font=("Arial", self.score_title_font),
-            bg="#fdfefe"
-        ).grid(row=1, column=2)
+        self.op_score_label.grid(row=1, column=2)
 
         
         self.turn_label = tk.Label(
             self,
-            font=("Arial", 12),
+            font=("Arial", self.turn_font),
             fg="#34495e"
         )
-        self.turn_label.pack(pady=(0, 6))
+        self.turn_label.pack(pady=self.turn_pady)
+
 
         self.update_score()
         # ===== MENU NỔI =====
@@ -122,29 +108,27 @@ class GameScreen(tk.Frame):
 
         tk.Button(
             self.menu_frame, text="Tiếp tục",
-            width=15, command=self.resume
+            width=self.menu_btn_width, command=self.resume
         ).pack(pady=4)
 
         tk.Button(
-            self .menu_frame, text="Luật chơi",
-            width=15, command=self .show_rules
-        ) .pack(pady=4)
+            self.menu_frame, text="Luật chơi",
+            width=self.menu_btn_width, command=self.show_rules
+        ).pack(pady=4)
 
         tk.Button(
             self.menu_frame, text="Thoát",
-            width=15, command=self.leave
+            width=self.menu_btn_width, command=self.leave
         ).pack(pady=4)
 
-        # ===== BÀN CỜ =====
         self.canvas = tk.Canvas(
             self,
-            width=size * self.cell_size,
-            height=size * self.cell_size,
-            bg="#E8D5B7",            # màu gỗ sáng
+            width=self.size * self.cell_size,
+            height=self.size * self.cell_size,
+            bg="#E8D5B7",
             highlightthickness=0
         )
-
-        self.canvas.pack()
+        self.canvas.pack(pady=self.canvas_pady)
 
         self.canvas.bind("<Button-1>", self.on_click)
 
@@ -442,6 +426,23 @@ class GameScreen(tk.Frame):
         rule_window.transient(self)
         rule_window.grab_set()
 
+        # ===== CĂN GIỮA THEO BÀN CỜ =====
+        self.update_idletasks()
+        rule_window.update_idletasks()
+
+        board_x = self.canvas.winfo_rootx()
+        board_y = self.canvas.winfo_rooty()
+        board_w = self.canvas.winfo_width()
+        board_h = self.canvas.winfo_height()
+
+        win_w = rule_window.winfo_width()
+        win_h = rule_window.winfo_height()
+
+        x = board_x + (board_w - win_w) // 2
+        y = board_y + (board_h - win_h) // 2 - 120
+
+        rule_window.geometry(f"+{x}+{y}")
+
         # ===== KHUNG CHÍNH =====
         container = tk.Frame(rule_window, padx=20, pady=15)
         container.pack(fill="both", expand=True)
@@ -530,3 +531,37 @@ class GameScreen(tk.Frame):
         x = self.canvas.winfo_x() + self.canvas.winfo_width() // 2
         y = self.canvas.winfo_y() + self.canvas.winfo_height() // 2
         self.overlay.place(anchor="center", x=x, y=y)
+
+    def setup_ui_config(self):
+        if self.size == 3:
+            # ===== 3x3 =====
+            self.cell_size = 120  #kích thước ô
+            self.xo_font_size = 64   #kich thước X,O
+
+            self.score_font = 22
+            self.score_title_font = 18
+            self.score_padx = 18        #độ rộng khug tỉ số
+            self.score_pady = 8         #độ dài khug tỉ số
+
+            self.turn_font = 14         #Cỡ chữ dòng “Đến lượt bạn / đối thủ”
+            self.turn_pady = (0, 6)     # Khoảng cách trên/dưới dòng lượt chơi
+
+            self.canvas_pady = (45, 0)   # khoảng cách trên/dưới bàn cờ
+            self.menu_btn_width = 15
+
+        else:
+            # ===== 10x10 =====
+            self.cell_size = 50
+            self.xo_font_size = 28
+
+            self.score_font = 16
+            self.score_title_font = 12
+            self.score_padx = 10
+            self.score_pady = 5
+
+            self.turn_font = 12
+            self.turn_pady = (0, 4)
+
+            self.canvas_pady = (6, 0)
+            self.menu_btn_width = 15
+    
