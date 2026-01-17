@@ -17,9 +17,17 @@ class GameScreen(tk.Frame):
         if size == 3:
             self.cell_size = 120      # bàn 3x3 TO
             self.xo_font_size = 64
+            self.score_font = 22
+            self.score_title_font = 18
+            self.score_padx = 18
+            self.score_pady = 8
         else:
             self.cell_size = 50       # bàn 10x10
             self.xo_font_size = 28
+            self.score_font = 16
+            self.score_title_font = 12
+            self.score_padx = 10
+            self.score_pady = 5
 
         self.board = [[None] * size for _ in range(size)]
         self.score = score if score else {"me": 0, "op": 0}
@@ -31,20 +39,81 @@ class GameScreen(tk.Frame):
         self.menu_btn = tk.Button(top_bar, text="☰", command=self.toggle_menu)
         self.menu_btn.pack(side="right", padx=10)
 
-        # ===== TỈ SỐ =====
-        self.score_label = tk.Label(
+        # ===== KHUNG TỈ SỐ =====
+        self.score_frame = tk.Frame(
             self,
-            font=("Arial", 13, "bold"),
-            justify="center"
+            bd=2,
+            relief="groove",
+            bg="#fdfefe",
+            padx=self.score_padx,
+            pady=self.score_pady
         )
-        self.score_label.pack(pady=5)
+        self.score_frame.pack(pady=(6, 10))
+
+        # Tiêu đề
+        tk.Label(
+            self.score_frame,
+            text="TỈ SỐ",
+            font=("Arial", self.score_title_font, "bold"),
+            fg="#2c3e50",
+            bg="#fdfefe"
+        ).pack(pady=(0, 4))
+
+        # Hàng hiển thị điểm
+        row = tk.Frame(self.score_frame, bg="#fdfefe")
+        row.pack()
+
+        # ===== BẠN =====
+        self.me_score_label = tk.Label(
+            row,
+            text="0",
+            font=("Arial", self.score_font, "bold"),
+            fg="#27ae60",
+            bg="#fdfefe",
+            width=3
+        )
+        self.me_score_label.grid(row=0, column=0)
+
+        tk.Label(
+            row,
+            text="Bạn",
+            font=("Arial", self.score_title_font),
+            bg="#fdfefe"
+        ).grid(row=1, column=0)
+
+        # ===== PHÂN CÁCH =====
+        tk.Label(
+            row,
+            text="—",
+            font=("Arial", self.score_font),
+            bg="#fdfefe"
+        ).grid(row=0, column=1, padx=10)
+
+        # ===== ĐỐI THỦ =====
+        self.op_score_label = tk.Label(
+            row,
+            text="0",
+            font=("Arial", self.score_font, "bold"),
+            fg="#e74c3c",
+            bg="#fdfefe",
+            width=3
+        )
+        self.op_score_label.grid(row=0, column=2)
+
+        tk.Label(
+            row,
+            text="Đối thủ",
+            font=("Arial", self.score_title_font),
+            bg="#fdfefe"
+        ).grid(row=1, column=2)
+
+        
         self.turn_label = tk.Label(
             self,
             font=("Arial", 12),
             fg="#34495e"
         )
         self.turn_label.pack(pady=(0, 6))
-
 
         self.update_score()
         # ===== MENU NỔI =====
@@ -57,7 +126,7 @@ class GameScreen(tk.Frame):
         ).pack(pady=4)
 
         tk.Button(
-            self .menu_frame, text="luật chơi",
+            self .menu_frame, text="Luật chơi",
             width=15, command=self .show_rules
         ) .pack(pady=4)
 
@@ -82,6 +151,11 @@ class GameScreen(tk.Frame):
         self.update_status()
         self.draw_grid()
 
+    # ================= SCORE =================
+    def update_score(self):
+        self.me_score_label.config(text=str(self.score["me"]))
+        self.op_score_label.config(text=str(self.score["op"]))
+
     # ================= STATUS =================
     def update_status(self):
         if self.your_turn:
@@ -96,12 +170,7 @@ class GameScreen(tk.Frame):
             )
 
 
-    # ================= SCORE =================
-    def update_score(self):
-        self.score_label.config(
-            text=f"Tỉ số\nBạn {self.score['me']} - {self.score['op']} Đối thủ"
-        )
-
+    
     # ================= GRID =================
     def draw_grid(self):
         for i in range(self.size + 1):
