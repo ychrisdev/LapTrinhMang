@@ -27,13 +27,10 @@ class GameScreen(tk.Frame):
         # ===== KHUNG TỈ SỐ =====
         self.score_frame = tk.Frame(
             self,
-            bd=2,
-            relief="groove",
-            bg="#fdfefe",
-            padx=self.score_padx,
-            pady=self.score_pady
+        # dùng nền chung → không thấy khung
         )
-        self.score_frame.pack(pady=(6, 10))
+        self.score_frame.pack(pady=(8, 12))
+
 
         # Tiêu đề
         tk.Label(
@@ -431,7 +428,7 @@ class GameScreen(tk.Frame):
         # ===== CỬA SỔ LUẬT CHƠI =====
         rule_window = tk.Toplevel(self)
         rule_window.title("Luật chơi")
-        rule_window.geometry("320x280")
+        rule_window.geometry("320x250")
         rule_window.resizable(False, False)
         rule_window.transient(self)
         rule_window.grab_set()
@@ -463,26 +460,19 @@ class GameScreen(tk.Frame):
             text="LUẬT CHƠI CARO",
             font=("Arial", 16, "bold"),
             fg="#2c3e50"
-        ).pack(pady=(0, 10))
+        ).pack(pady=(5, 10))
 
         # ===== NỘI DUNG =====
         tk.Label(
             container,
-            text=f"Bàn cờ: {board_size}",
-            font=("Arial", 13)
-        ).pack(pady=5)
-
-        tk.Label(
-            container,
             text=f"Điều kiện thắng:",
-            font=("Arial", 13, "bold")
+            font=("Arial", 15, "bold")
         ).pack(pady=(10, 2))
 
         tk.Label(
             container,
             text=rule_win,
-            font=("Arial", 14),
-            fg="#e74c3c"
+            font=("Arial", 16),
         ).pack(pady=5)
 
         # ===== NÚT ĐÓNG =====
@@ -493,7 +483,7 @@ class GameScreen(tk.Frame):
             width=14,
             height=1,
             command=rule_window.destroy
-        ).pack(pady=15)
+        ).pack(pady=(15,0))
 
         # Đóng menu nổi sau khi mở luật
         self.menu_frame.place_forget()
@@ -553,7 +543,7 @@ class GameScreen(tk.Frame):
             self.score_padx = 18        #độ rộng khug tỉ số
             self.score_pady = 8         #độ dài khug tỉ số
 
-            self.turn_font = 14         #Cỡ chữ dòng “Đến lượt bạn / đối thủ”
+            self.turn_font = 18         #Cỡ chữ dòng “Đến lượt bạn / đối thủ”
             self.turn_pady = (6, 0)     # Khoảng cách trên/dưới dòng lượt chơi
 
             self.canvas_pady = (30, 0)   # khoảng cách trên/dưới bàn cờ
