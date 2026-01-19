@@ -27,21 +27,20 @@ class GameScreen(tk.Frame):
         # ===== KHUNG TỈ SỐ =====
         self.score_frame = tk.Frame(
             self,
-        # dùng nền chung → không thấy khung
+            bg=self["bg"]   # dùng nền chung của GameScreen → không còn nền chữ
         )
-        self.score_frame.pack(pady=(8, 12))
+        self.score_frame.pack(pady=(0, 6))
 
-        # Tiêu đề
+        # ===== TIÊU ĐỀ =====
         tk.Label(
             self.score_frame,
             text="TỈ SỐ",
-            font=("Arial", self.score_title_font, "bold"),
-            fg="#2c3e50",
-            bg="#fdfefe"
+            font=("Arial", self.score_title_font_1, "bold"),
+            fg="#2c3e50"
         ).pack(pady=(0, 4))
 
-        # Hàng hiển thị điểm
-        row = tk.Frame(self.score_frame, bg="#fdfefe")
+        # ===== HÀNG ĐIỂM =====
+        row = tk.Frame(self.score_frame, bg=self["bg"])
         row.pack()
 
         # ===== BẠN =====
@@ -49,7 +48,6 @@ class GameScreen(tk.Frame):
             row,
             text="Bạn",
             font=("Arial", self.score_title_font),
-            bg="#fdfefe"
         ).grid(row=0, column=0)
 
         self.me_score_label = tk.Label(
@@ -57,7 +55,6 @@ class GameScreen(tk.Frame):
             text="0",
             font=("Arial", self.score_font, "bold"),
             fg="#27ae60",
-            bg="#fdfefe",
             width=3
         )
         self.me_score_label.grid(row=1, column=0)
@@ -65,9 +62,8 @@ class GameScreen(tk.Frame):
         # ===== PHÂN CÁCH =====
         tk.Label(
             row,
-            text="—",
-            font=("Arial", self.score_font),
-            bg="#fdfefe"
+            text="   ",
+            font=("Arial", self.score_font)
         ).grid(row=1, column=1, padx=12)
 
         # ===== ĐỐI THỦ =====
@@ -75,7 +71,6 @@ class GameScreen(tk.Frame):
             row,
             text="Đối thủ",
             font=("Arial", self.score_title_font),
-            bg="#fdfefe"
         ).grid(row=0, column=2)
 
         self.op_score_label = tk.Label(
@@ -83,10 +78,10 @@ class GameScreen(tk.Frame):
             text="0",
             font=("Arial", self.score_font, "bold"),
             fg="#e74c3c",
-            bg="#fdfefe",
             width=3
         )
         self.op_score_label.grid(row=1, column=2)
+
 
         
         self.turn_label = tk.Label(
@@ -528,13 +523,14 @@ class GameScreen(tk.Frame):
             self.cell_size = 120  #kích thước ô
             self.xo_font_size = 64   #kich thước X,O
 
-            self.score_font = 22
-            self.score_title_font = 18
+            self.score_font = 28
+            self.score_title_font_1= 20
+            self.score_title_font = 15
             self.score_padx = 18        #độ rộng khug tỉ số
-            self.score_pady = 8         #độ dài khug tỉ số
+            self.score_pady = 7       #độ dài khug tỉ số
 
             self.turn_font = 18         #Cỡ chữ dòng “Đến lượt bạn / đối thủ”
-            self.turn_pady = (6, 0)     # Khoảng cách trên/dưới dòng lượt chơi
+            self.turn_pady = (25, 0)     # Khoảng cách trên/dưới dòng lượt chơi
 
             self.canvas_pady = (30, 0)   # khoảng cách trên/dưới bàn cờ
             self.menu_btn_width = 15
@@ -544,13 +540,14 @@ class GameScreen(tk.Frame):
             self.cell_size = 50
             self.xo_font_size = 28
 
-            self.score_font = 16
-            self.score_title_font = 12
+            self.score_font = 20
+            self.score_title_font_1= 18
+            self.score_title_font = 14
             self.score_padx = 10
-            self.score_pady = 5
+            self.score_pady = 4
 
             self.turn_font = 12
-            self.turn_pady = (0, 4)
+            self.turn_pady = (8, 4)
 
             self.canvas_pady = (6, 0)
             self.menu_btn_width = 15

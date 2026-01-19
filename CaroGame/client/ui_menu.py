@@ -1,4 +1,5 @@
 import tkinter as tk
+from PIL import Image, ImageTk
 
 class MenuScreen(tk.Frame):
     def __init__(self, master, client):
@@ -10,6 +11,22 @@ class MenuScreen(tk.Frame):
             text="CARO GAME",
             font=("Arial", 28, "bold")
         ).pack(pady=40)
+
+                # ===== LOGO =====
+                # ===== LOGO (180x180) =====
+        try:
+            img = Image.open("../img/logo.png")
+            img = img.resize((180, 180), Image.LANCZOS)
+
+            self.logo_img = ImageTk.PhotoImage(img)
+
+            tk.Label(
+                self,
+                image=self.logo_img
+            ).pack(pady=(0, 25))
+        except Exception as e:
+            print("Không load được logo:", e)
+
 
         self.size_var = tk.IntVar(value=3)
 
