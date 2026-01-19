@@ -140,6 +140,22 @@ def handle_client(conn, addr):
                 if current_room and current_room.finished:
                     current_room.rematch_votes[conn] = True
 
+                    # Nếu đối thủ đã chọn NO → báo cho người này và dọn phòng
+                    if any(v is False for v in current_room.rematch_votes.values()):
+                        try:
+                            conn.sendall(encode("opponent_left", {}))
+                        except:
+                            pass
+
+                        if current_room in rooms:
+                            rooms.remove(current_room)
+                        if current_size and waiting.get(current_size) == current_room:
+                            waiting[current_size] = None
+
+                        current_room.players.clear()
+                        current_room = None
+                        return
+
                     # Nếu cả 2 đều Yes → chơi lại
                     if all(v is True for v in current_room.rematch_votes.values()):
                         current_room.reset()
@@ -161,32 +177,57 @@ def handle_client(conn, addr):
                 if not current_room:
                     continue
 
-                # Người này chọn NO
-                current_room.rematch_votes[conn] = False
+                # ===== ĐANG Ở GIAI ĐOẠN REMATCH =====
+                if current_room.finished:
+                    current_room.rematch_votes[conn] = False
 
-                # Tìm người còn lại
-                others = [p for p in current_room.players if p != conn]
-
-                # Người bấm NO → về menu ngay
-                try:
-                    conn.sendall(encode("back_to_menu", {}))
-                except:
-                    pass
-
-                # Người còn lại chỉ nhận thông báo đối thủ đã thoát
-                for p in others:
+                    # Người bấm NO → về menu ngay
                     try:
-                        p.sendall(encode("opponent_left", {}))
+                        conn.sendall(encode("back_to_menu", {}))
                     except:
                         pass
 
-                # Dọn phòng
+                    # Nếu đối thủ chưa chọn gì → KHÔNG làm gì thêm
+                    if any(v is None for v in current_room.rematch_votes.values()):
+                        current_room = None   # Ngăn finally gửi opponent_left
+                        return
+
+                    # ===== LÚC NÀY: CẢ 2 ĐÃ CHỌN =====
+                    for p, v in list(current_room.rematch_votes.items()):
+                        try:
+                            if v is True:
+                                # Người bấm YES → chỉ nhận thông báo
+                                p.sendall(encode("opponent_left", {}))
+                        except:
+                            pass
+
+                    # Dọn phòng hoàn toàn
+                    if current_room in rooms:
+                        rooms.remove(current_room)
+                    if current_size and waiting.get(current_size) == current_room:
+                        waiting[current_size] = None
+
+                    current_room.players.clear()
+                    current_room = None
+                    return
+
+                # ===== THOÁT KHI ĐANG CHƠI / ĐANG CHỜ =====
+                # ===== THOÁT KHI ĐANG CHƠI / ĐANG CHỜ =====
+                for p in current_room.players:
+                    if p != conn:
+                        try:
+                            p.sendall(encode("opponent_left", {}))
+                        except:
+                            pass
+
                 if current_room in rooms:
                     rooms.remove(current_room)
                 if current_size and waiting.get(current_size) == current_room:
                     waiting[current_size] = None
 
+                current_room.players.clear()
                 current_room = None
+                return
 
     except Exception as e:
         print(f"[!] Error with {addr}: {e}")

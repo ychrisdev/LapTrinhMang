@@ -36,3 +36,4 @@ class Room:
         self.turn = 0
         self.finished = False
         self.paused_by.clear()
+        self.reset_votes()

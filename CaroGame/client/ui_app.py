@@ -23,6 +23,15 @@ class App(tk.Tk):
             self.current_screen = None
 
     def show_menu(self):
+        # Reset tỉ số MỖI LẦN quay về menu
+        self.score = {"me": 0, "op": 0}
+
+        from client import Client
+
+        if not self.client.running:
+            self.client = Client("127.0.0.1", 5000)
+            self.client.set_app(self)
+
         self.clear_screen()
         self.current_screen = MenuScreen(self, self.client)
         self.current_screen.pack(fill="both", expand=True)
@@ -56,7 +65,6 @@ class App(tk.Tk):
                 )
                 self.current_screen.pack(fill="both", expand=True)
 
-
         elif msg_type == "update":
             if hasattr(self.current_screen, "handle_update"):
                 self.after(0, lambda: self.current_screen.handle_update(
@@ -81,8 +89,23 @@ class App(tk.Tk):
 
         elif msg_type == "opponent_left":
             if isinstance(self.current_screen, GameScreen):
-                self.after(0, self.current_screen.handle_opponent_left)
+                def handle():
+                    self.current_screen.handle_opponent_left()
+
+                    # đóng client cũ để buộc tạo client mới khi về menu
+                    try:
+                        self.client.running = False
+                        self.client.sock.close()
+                    except:
+                        pass
+
+                self.after(0, handle)
 
         elif msg_type == "back_to_menu":
-            self.score = {"me": 0, "op": 0}
+            try:
+                self.client.running = False
+                self.client.sock.close()
+            except:
+                pass
+
             self.show_menu()

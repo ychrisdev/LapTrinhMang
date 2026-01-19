@@ -142,12 +142,12 @@ class GameScreen(tk.Frame):
         if self.your_turn:
             self.turn_label.config(
                 text="Đến lượt bạn",
-                fg="#27ae60"   # xanh – đang được chơi
+                fg="#27ae60"
             )
         else:
             self.turn_label.config(
                 text="Đang chờ đối thủ...",
-                fg="#7f8c8d"   # xám – đang chờ
+                fg="#7f8c8d"
             )
 
 
@@ -216,7 +216,6 @@ class GameScreen(tk.Frame):
         self.app.score = self.score
         self.update_score()
 
-        # Chỉ hỏi rematch nếu đối thủ chưa rời
         if not self.opponent_left:
             self.after(1500, self.ask_rematch)
 
@@ -309,7 +308,7 @@ class GameScreen(tk.Frame):
         self.opponent_left = True
         self.your_turn = False
 
-        # Nếu đang có cửa sổ rematch thì đóng nó
+        # Đóng cửa sổ rematch nếu có
         if hasattr(self, "rematch_win"):
             try:
                 self.rematch_win.destroy()
@@ -317,31 +316,12 @@ class GameScreen(tk.Frame):
                 pass
             del self.rematch_win
 
-        # Trường hợp người này đã bấm YES rồi
-        if self.rematch_chosen:
-            # Hiển thị thông báo rõ ràng
-            self.show_center_message(
-                "Đối thủ không muốn chơi tiếp\nĐang quay về menu...",
-                "#c0392b"
-            )
-
-            # Chờ một chút cho người chơi đọc xong rồi mới out
-            self.after(1500, lambda: self.app.client.send("leave_room", {}))
-            return
-
-        # Trường hợp chưa bấm Yes/No (đang chơi hoặc vừa kết thúc ván)
+        # Hiện thông báo
         self.show_center_message("ĐỐI THỦ ĐÃ THOÁT", "#c0392b")
 
-        # Nếu đang ở giai đoạn hỏi rematch
-        if hasattr(self, "rematch_win"):
-            try:
-                self.rematch_win.destroy()
-            except:
-                pass
-            del self.rematch_win
+        # Sau 1.5s quay menu luôn (KHÔNG gửi gì lên server)
+        self.after(1500, self.app.show_menu)
 
-        # Cho người chơi nhìn thấy thông báo một chút rồi mới out
-        self.after(1500, lambda: self.app.client.send("leave_room", {}))
 
     def on_yes_rematch(self):
         self.rematch_chosen = True
@@ -353,14 +333,14 @@ class GameScreen(tk.Frame):
             )
             if hasattr(self, "rematch_win"):
                 self.rematch_win.destroy()
-            self.after(1500, lambda: self.app.client.send("leave_room", {}))
+
+            self.after(1500, self.app.show_menu)
             return
 
         if hasattr(self, "rematch_win"):
             self.rematch_win.destroy()
 
         self.app.client.send("rematch", {})
-
 
     def on_no_rematch(self):
         self.rematch_chosen = True
@@ -401,8 +381,6 @@ class GameScreen(tk.Frame):
             self.menu_frame.lift()   # ÉP MENU NỔI LÊN TRÊN CANVAS
             self.menu_open = True
 
-
-
     def resume(self):
         self.menu_frame.place_forget()
         self.menu_open = False
@@ -419,7 +397,20 @@ class GameScreen(tk.Frame):
 
     def leave(self):
         self.app.is_leaving = True
-        self.app.client.send("leave_room", {})
+
+        # thử gửi lên server, nếu lỗi thì bỏ qua
+        try:
+            self.app.client.send("leave_room", {})
+        except:
+            pass
+
+        # khóa client để không gửi thêm gói nào nữa
+        if hasattr(self.app.client, "running"):
+            self.app.client.running = False
+
+        # quay về menu ngay lập tức
+        self.app.show_menu()
+
 
     def show_rules(self):
         rule_win = "3 ô liên tiếp" if self.size == 3 else "5 ô liên tiếp"

@@ -9,8 +9,7 @@ class Client:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((host, port))
 
-        self.app = None  # sẽ gán sau khi tạo App
-
+        self.app = None
         self.running = True
         threading.Thread(target=self.listen_server, daemon=True).start()
 
@@ -18,10 +17,13 @@ class Client:
         self.app = app
 
     def send(self, msg_type, data):
+        if not self.running:
+            return
         try:
             self.sock.sendall(encode(msg_type, data))
         except:
             print("Send failed")
+            self.running = False
 
     def listen_server(self):
         while self.running:
@@ -40,8 +42,8 @@ class Client:
                 print("Listen error:", e)
                 break
 
+        self.running = False
         self.sock.close()
-
 
 def main():
     client = Client("127.0.0.1", 5000)
