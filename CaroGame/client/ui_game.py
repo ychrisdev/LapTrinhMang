@@ -31,7 +31,6 @@ class GameScreen(tk.Frame):
         )
         self.score_frame.pack(pady=(8, 12))
 
-
         # Tiêu đề
         tk.Label(
             self.score_frame,

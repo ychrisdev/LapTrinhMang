@@ -14,6 +14,11 @@ waiting = {
     10: None
 }
 
+def clear_waiting_if_needed(conn, current_room, current_size):
+    if current_room and current_size in waiting:
+        if waiting.get(current_size) == current_room:
+            waiting[current_size] = None
+
 
 def handle_client(conn, addr):
     print(f"[+] Client connected: {addr}")
@@ -34,11 +39,19 @@ def handle_client(conn, addr):
             payload = msg["data"]
 
             if msg_type == "quick_play":
-                size = payload["size"]
-                current_size = size
+                for s, room in waiting.items():
+                    if room and conn in room.players:
+                        if room in rooms:
+                            rooms.remove(room)
+                        waiting[s] = None
+                        room.players.clear()
 
-                if size not in waiting:
-                    waiting[size] = None
+                current_room = None
+                current_size = None
+                size = payload["size"]
+            
+                # ===== BẮT ĐẦU QUICK PLAY MỚI =====
+                current_size = size
 
                 if waiting[size] is None:
                     room = Room(size)
@@ -174,45 +187,59 @@ def handle_client(conn, addr):
                         }))
 
             elif msg_type == "leave_room":
+
+                # ===== KHÔNG Ở ROOM → BỎ QUA =====
                 if not current_room:
                     continue
 
-                # ===== ĐANG Ở GIAI ĐOẠN REMATCH =====
+                # ===== ĐANG CHỜ (ROOM CHỈ CÓ 1 NGƯỜI) =====
+                if len(current_room.players) == 1:
+                    # Dọn waiting
+                    if current_size and waiting.get(current_size) == current_room:
+                        waiting[current_size] = None
+
+                    if current_room in rooms:
+                        rooms.remove(current_room)
+
+                    current_room.players.clear()
+                    current_room = None
+                    current_size = None
+                    continue
+
+                # ===== ĐANG REMATCH =====
                 if current_room.finished:
                     current_room.rematch_votes[conn] = False
 
-                    # Người bấm NO → về menu ngay
                     try:
                         conn.sendall(encode("back_to_menu", {}))
                     except:
                         pass
 
-                    # Nếu đối thủ chưa chọn gì → KHÔNG làm gì thêm
+                    # Nếu đối thủ chưa chọn → chờ
                     if any(v is None for v in current_room.rematch_votes.values()):
-                        current_room = None   # Ngăn finally gửi opponent_left
+                        current_room = None
                         return
 
-                    # ===== LÚC NÀY: CẢ 2 ĐÃ CHỌN =====
-                    for p, v in list(current_room.rematch_votes.items()):
-                        try:
-                            if v is True:
-                                # Người bấm YES → chỉ nhận thông báo
+                    # Báo cho người còn lại
+                    for p, v in current_room.rematch_votes.items():
+                        if v is True:
+                            try:
                                 p.sendall(encode("opponent_left", {}))
-                        except:
-                            pass
+                            except:
+                                pass
 
-                    # Dọn phòng hoàn toàn
                     if current_room in rooms:
                         rooms.remove(current_room)
+
                     if current_size and waiting.get(current_size) == current_room:
                         waiting[current_size] = None
 
                     current_room.players.clear()
                     current_room = None
+                    current_size = None
                     return
 
-                # ===== THOÁT KHI ĐANG CHƠI / ĐANG CHỜ =====
-                # ===== THOÁT KHI ĐANG CHƠI / ĐANG CHỜ =====
+                # ===== ĐANG CHƠI =====
                 for p in current_room.players:
                     if p != conn:
                         try:
@@ -222,11 +249,13 @@ def handle_client(conn, addr):
 
                 if current_room in rooms:
                     rooms.remove(current_room)
+
                 if current_size and waiting.get(current_size) == current_room:
                     waiting[current_size] = None
 
                 current_room.players.clear()
                 current_room = None
+                current_size = None
                 return
 
     except Exception as e:
@@ -251,7 +280,6 @@ def handle_client(conn, addr):
                 waiting[current_size] = None
 
         conn.close()
-
 
 def main():
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
