@@ -103,7 +103,7 @@ class GameScreen(tk.Frame):
 
         self.update_score()
         # ===== MENU NỔI =====
-        self.menu_frame = tk.Frame(self, bd=2, relief="ridge", bg="white")
+        self.menu_frame = tk.Frame(self, bd=2, relief="ridge", bg="white", pady=8)
         self.menu_frame.place_forget()
 
         tk.Button(
@@ -387,10 +387,20 @@ class GameScreen(tk.Frame):
             fx = self.winfo_rootx()
             fy = self.winfo_rooty()
 
-            x = bx - fx + self.menu_btn.winfo_width() - self.menu_frame.winfo_reqwidth()
+           # ===== KÍCH THƯỚC MENU =====
+            menu_w = 140
+            menu_h = 130
+
+            x = bx - fx + self.menu_btn.winfo_width() - menu_w
             y = by - fy
 
-            self.menu_frame.place(x=x, y=y)
+            self.menu_frame.place(
+                x=x,
+                y=y,
+                width=menu_w,
+                height=menu_h
+            )
+
             self.menu_frame.lift()   # ÉP MENU NỔI LÊN TRÊN CANVAS
             self.menu_open = True
 
@@ -544,9 +554,9 @@ class GameScreen(tk.Frame):
             self.score_pady = 8         #độ dài khug tỉ số
 
             self.turn_font = 14         #Cỡ chữ dòng “Đến lượt bạn / đối thủ”
-            self.turn_pady = (0, 6)     # Khoảng cách trên/dưới dòng lượt chơi
+            self.turn_pady = (6, 0)     # Khoảng cách trên/dưới dòng lượt chơi
 
-            self.canvas_pady = (45, 0)   # khoảng cách trên/dưới bàn cờ
+            self.canvas_pady = (30, 0)   # khoảng cách trên/dưới bàn cờ
             self.menu_btn_width = 15
 
         else:
